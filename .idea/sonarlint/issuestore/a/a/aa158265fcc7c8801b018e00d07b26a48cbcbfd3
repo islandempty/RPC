@@ -1,0 +1,17 @@
+
+X
+java:S1596C"<Replace "Collections.EMPTY_SET" by "Collections.emptySet()".(‚ÀÐ8Å•Ý½œ/
+B
+java:S1452F"&Remove usage of generic wildcard type.(÷ýÛ"8Å•Ý½œ/
+C
+java:S1452B"&Remove usage of generic wildcard type.(­¶Ã–8Å•Ý½œ/
+B
+java:S1452F"&Remove usage of generic wildcard type.(÷ýÛ"8Å•Ý½œ/
+[
+java:S1596?">Replace "Collections.EMPTY_LIST" by "Collections.emptyList()".(¢“…Ö8Å•Ý½œ/
+\
+java:S1118	":Add a private constructor to hide the implicit public one.(Ûê•±øÿÿÿÿ8ý¸®½œ/
+^
+java:S1596G"<Replace "Collections.EMPTY_MAP" by "Collections.emptyMap()".(¸²¨¼þÿÿÿÿ8Å•Ý½œ/
+H
+java:S1452>"&Remove usage of generic wildcard type.(­Þ†¼ûÿÿÿÿ8Å•Ý½œ/
