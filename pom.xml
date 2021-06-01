@@ -10,11 +10,20 @@
     <version>1.0-SNAPSHOT</version>
     <modules>
         <module>hotdeploy</module>
+        <module>util</module>
+        <module>protocol</module>
     </modules>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
+
+        <!--核心spring框架-->
+        <spring.version>5.3.4</spring.version>
+        <spring.boot.version>2.4.3</spring.boot.version>
+
+        <!--tools工具包-->
+
     </properties>
 
 </project>
