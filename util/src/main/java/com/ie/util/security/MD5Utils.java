@@ -2,6 +2,8 @@ package com.ie.util.security;
 
 
 
+import com.ie.protocol.util.StringUtils;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 

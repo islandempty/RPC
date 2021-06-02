@@ -1,5 +1,7 @@
 package com.ie.hotdeploy.model;
 
+import com.ie.util.security.MD5Utils;
+
 /**
  * @author islandempty
  * @since 2021/6/1
@@ -19,7 +21,47 @@ public class ClassFileDef {
         this.path = path;
         this.lastModifyTime = lastModifyTime;
         this.data = data;
-      //  this.md5 = MD5Utils.bytesToMD5(data);
+        this.md5 = MD5Utils.bytesToMD5(data);
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public String getClassName() {
+        return className;
+    }
+
+    public void setClassName(String className) {
+        this.className = className;
+    }
+
+    public byte[] getData() {
+        return data;
+    }
+
+    public void setData(byte[] data) {
+        this.data = data;
+    }
+
+    public long getLastModifyTime() {
+        return lastModifyTime;
+    }
+
+    public void setLastModifyTime(long lastModifyTime) {
+        this.lastModifyTime = lastModifyTime;
+    }
+
+    public String getMd5() {
+        return md5;
+    }
+
+    public void setMd5(String md5) {
+        this.md5 = md5;
     }
 }
 
