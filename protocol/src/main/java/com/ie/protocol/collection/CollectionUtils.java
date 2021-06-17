@@ -257,5 +257,31 @@ public class CollectionUtils {
 
         return result;
     }
+
+    /**
+     * 获取集合的最后几个元素
+     */
+    public static <T> List<T> subListLast(List<T> list, int num) {
+        if (isEmpty(list)) {
+            return Collections.emptyList();
+        }
+
+        var startIndex = list.size() - num;
+        if (startIndex <= 0) {
+            return new ArrayList<>(list);
+        }
+
+        var result = new ArrayList<T>();
+
+
+        for (T element : list) {
+            startIndex--;
+            if (startIndex < 0) {
+                result.add(element);
+            }
+        }
+
+        return result;
+    }
 }
 

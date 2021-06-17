@@ -6,9 +6,10 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="protocol" />
+        <module name="hotswap" />
         <module name="util" />
         <module name="hotdeploy" />
-        <module name="protocol" />
       </profile>
     </annotationProcessing>
   </component>
