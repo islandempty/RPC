@@ -18,3 +18,9 @@ o
 .gitignore,a\5\a5cc2925ca8258af241be7e5b0381edf30266302
 u
 Eprotocol/src/main/java/com/ie/protocol/exception/AssertException.java,4\e\4e87f094bd1265e87db9b45e508f96449e5db6ac
+v
+Fprotocol/src/main/java/com/ie/protocol/collection/CollectionUtils.java,a\a\aa158265fcc7c8801b018e00d07b26a48cbcbfd3
+h
+8protocol/src/main/java/com/ie/protocol/util/IOUtils.java,9\5\95cfcf34c5a5856831d621679b88967a22b99575
+E
+protocol/protocol.iml,3\8\388b494954810e12020c331211fd02ccb4791ba0
