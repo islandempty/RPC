@@ -2,9 +2,8 @@ package com.ie.protocol.util;
 
 import com.ie.protocol.collection.CollectionUtils;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
+import java.nio.channels.FileChannel;
 import java.util.*;
 
 /**
@@ -221,7 +220,22 @@ public abstract class FileUtils {
         copyFile(srcFile,destFile,true);
     }
 
+    public static void copyFileToDirectory(final File srcFile, final File destDir) throws IOException{
+        copyFileToDirectory(srcFile,destDir,true);
+    }
 
+    public static void copyFileToDirectory(final File srcFile,final File destDir, final boolean preserveFileDate)throws IOException{
+        if (destDir == null){
+            throw new NullPointerException("Destination must not be null");
+        }
+
+        if (destDir.exists() && !destDir.isDirectory()){
+            throw new IllegalArgumentException(StringUtils.format("Destination [destDir:{}] is not a directory", destDir));
+        }
+
+        final File destFile = new File(destDir , srcFile.getName());
+        copyFile(srcFile,destFile,preserveFileDate);
+    }
     /**
      *将文件复制到保新位置。
      *<p>
@@ -288,5 +302,241 @@ public abstract class FileUtils {
             throw new FileNotFoundException(StringUtils.format("Source [src:{}] does not exist", src));
         }
     }
+
+    /**
+     *内部复制文件方法。
+     *这将缓存原始文件长度
+     *如果输出文件长度与当前输入文件长度不同,引发IOException
+     *因此，如果文件更改大小，它可能会失败。
+     *如果输入文件被截断了一部分，它也可能会因“IllegalArgumentException:Negative size”而失败
+     *通过复制数据，新文件的大小小于当前位置。
+     * @param srcFile          the validated source file, must not be {@code null}
+     * @param destFile         the validated destination file, must not be {@code null}
+     * @param preserveFileDate whether to preserve the file date
+     * @throws IOException              if an error occurs
+     * @throws IOException              if the output file length is not the same as the input file length after the
+     *                                  copy completes
+     * @throws IllegalArgumentException "Negative size" if the file is truncated so that the size is less than the
+     *                                  position
+     */
+    private static void doCopyFile(final File srcFile,final File destFile,final boolean preserveFileDate)throws IOException{
+        if (destFile.exists()&&destFile.isDirectory()){
+            throw new IOException(StringUtils.format("Destination [destFile:{}] exists but is a directory", destFile));
+        }
+
+        FileInputStream fis = null;
+        FileOutputStream fos = null;
+        FileChannel input = null;
+        FileChannel output =null ;
+
+        try {
+            fis = new FileInputStream(srcFile);
+            fos = new FileOutputStream(destFile);
+            input = fis.getChannel();
+            output = fos.getChannel();
+            final long size = input.size();
+            long pos =0;
+            long count;
+
+            //每次最多复制FILE_COPY_BUFFER_SIZE大小的文件
+            while (pos < size){
+                final long remain = size-pos;
+                count = Math.min(remain,FILE_COPY_BUFFER_SIZE);
+                final long bytesCopied = output.transferFrom(input,pos,count);
+                if(bytesCopied==0){
+                    break;
+                }
+                pos+=bytesCopied;
+            }
+        }finally {
+            IOUtils.closeIO(output,fos,input,fis);
+        }
+
+        //复制出错
+        final long srcLen = srcFile.length();
+        final long dstLen = destFile.length();
+        if (srcLen != dstLen){
+            throw new IOException(StringUtils.format("Failed to copy full contents from [srcFile:{}] to [destFile:{}] Expected length:[srcLen:{}] Actual [dstLen:{}]"
+                    , srcFile, destFile, srcLen, dstLen));
+        }
+        //是否保留文件日期
+        if (preserveFileDate){
+            destFile.setLastModified(srcFile.lastModified());
+        }
+    }
+
+    //-------------------------------------------读取文件----------------------------------------
+
+    /**
+     *将文件内容读入字节数组
+     *
+     * @param file 需要读的文件,不能为空
+     * @return  文件的内容
+     * @throws IOException
+     */
+    public static byte[] readFileToByteArray(final File file) throws IOException {
+        InputStream in = null;
+        try {
+            in = openInputStream(file);
+            return IOUtils.toByteArray(in);
+        }finally {
+            IOUtils.closeIO(in);
+        }
+    }
+
+    public static String readFileToString(final File file){
+        return StringUtils.joinWith(StringUtils.EMPTY , readFileToStringList(file));
+    }
+
+    //将文件内容转换为字符串
+    public static List<String> readFileToStringList(final File file){
+
+        FileInputStream fileInputStream = null;
+        //从字节流到字符流
+        InputStreamReader inputStreamReader = null;
+        BufferedReader bufferedReader = null;
+        var list = new ArrayList<String>();
+        try {
+            fileInputStream = openInputStream(file);
+            inputStreamReader = new InputStreamReader(fileInputStream,StringUtils.DEFAULT_CHARSET_NAME);
+            bufferedReader =new BufferedReader(inputStreamReader);
+            String line;
+            while ((line = bufferedReader.readLine())!=null){
+                list.add(line);
+            }
+        }catch (IOException e){
+            throw new RuntimeException(e);
+        }finally {
+            IOUtils.closeIO(bufferedReader,inputStreamReader,fileInputStream);
+        }
+        return list;
+    }
+
+    /**
+     * 以追加的方式写入一个content
+     * @param file  文件的绝对路径
+     * @param content 写入的内容
+     */
+    public static void writeStringToFile(File file , String content){
+        //字节流
+        FileOutputStream fileOutputStream = null;
+        // 转换流，设置编码集和解码集 .处理乱码问题，是字节到字符的桥梁
+        OutputStreamWriter outputStreamWriter = null;
+        //处理流中的缓存流，提高效率
+        BufferedWriter bufferedWriter =null;
+        // 如果不用缓冲流的话，程序是读一个数据，写一个数据，这样在数据量大的程序中非常影响效率。
+        // 缓冲流作用是把数据先写入缓冲区，等缓冲区满了，再把数据写到文件里。这样效率就大大提高了
+
+        try {
+            //以追加的方式打开文件
+            fileOutputStream = openOutputStream(file , true);
+            outputStreamWriter = new OutputStreamWriter(fileOutputStream,StringUtils.DEFAULT_CHARSET_NAME);
+            bufferedWriter =new BufferedWriter(outputStreamWriter);
+            bufferedWriter.write(content);
+        }catch (IOException e) {
+            throw new RuntimeException(e);
+        }finally {
+            IOUtils.closeIO(bufferedWriter, outputStreamWriter, fileOutputStream);
+        }
+    }
+
+    //把输入流写到文件
+    public static void writeInputStreamToFile(File file , InputStream inputStream){
+        FileOutputStream fileOutputStream = null;
+        try {
+            fileOutputStream = openOutputStream(file,true);
+            //把内容写入的操作在copy里
+            IOUtils.copy(inputStream,fileOutputStream);
+        }catch (IOException e){
+            throw new RuntimeException(e);
+        }finally {
+            IOUtils.closeIO(fileOutputStream);
+        }
+    }
+    //----------------------------------------打开和关闭文件流------------------------------------------
+
+    /**
+     * 为指定文件打开一个 FileInputStream且能够提供更好的错误信息而不是简单的调用流
+     *
+     * @param file 需要打开的文件，不能为空
+     * @return  指定文件的流
+     * @throws IOException
+     */
+    public static FileInputStream openInputStream(final File file) throws IOException{
+        if (file.exists()){
+            if (file.isDirectory()){
+                throw new IOException(StringUtils.format("File [file:{}] exists but is a directory", file));
+            }
+            if (!file.canRead()){
+                throw new IOException(StringUtils.format("File [file:{}] cannot be read", file));
+            }
+        }else {
+            throw new FileNotFoundException(StringUtils.format("File [file:{}] does not exist", file));
+        }
+        return new FileInputStream(file);
+    }
+
+
+    /**
+     * 如果文件不存在，则创建该文件。最好指定为true，以追加的方式打开文件
+     * <p>
+     * The parent directory will be created if it does not exist.The file will be created if it does not exist.
+     *
+     * @param file   the file to open for output, must not be {@code null}
+     * @param append if {@code true}, then bytes will be added to the end of the file rather than overwriting
+     * @return a new {@link FileOutputStream} for the specified file
+     * @throws IOException if the file object is a directory
+     * @throws IOException if the file cannot be written to
+     * @throws IOException if a parent directory needs creating but that fails
+     */
+    public static FileOutputStream openOutputStream(final File file, final boolean append) throws IOException {
+        if (file.exists()){
+            if (file.isDirectory()){
+                throw new IOException(StringUtils.format("File [file:{}] exists but is a directory", file));
+            }
+            if ((!file.canWrite())){
+                throw new IOException(StringUtils.format("File [file:{}] cannot be written to", file));
+            }
+        }else {
+            final File parentFile = file.getParentFile();
+            if (parentFile != null){
+                if (!parentFile.mkdirs() && !parentFile.isDirectory()){
+                    throw new IOException(StringUtils.format("Directory [parentFile:{}] could not be created", parentFile));
+                }
+            }
+        }
+        return new FileOutputStream(file,append);
+    }
+    //-------------------------------------------文件名称---------------------------------
+
+    /**
+     * 获得文件的拓展名，拓展名不带"."
+     * @param fileName
+     * @return
+     */
+    public static String fileExtName(String fileName){
+        if (StringUtils.isBlank(fileName)){
+            return StringUtils.EMPTY;
+        }
+        var fileExtName = StringUtils.substringAfterLast(fileName,StringUtils.PERIOD);
+        if (StringUtils.isBlank(fileExtName)||fileExtName.contains(UNIX_SEPARATOR)||fileExtName.contains(WINDOWS_SEPARATOR)){
+            return StringUtils.EMPTY;
+        }
+        return fileExtName;
+    }
+    /**
+     * 获得文件的名称,不带"."和拓展名
+     */
+    public static String fileSimpleName(String fileName){
+        if (StringUtils.isBlank(fileName)){
+            return StringUtils.EMPTY;
+        }
+        var fileSimpleName = StringUtils.substringBeforeLast(fileName,StringUtils.PERIOD);
+        if (StringUtils.isBlank(fileSimpleName)||fileSimpleName.contains(UNIX_SEPARATOR)||fileSimpleName.contains(WINDOWS_SEPARATOR)){
+            return StringUtils.EMPTY;
+        }
+        return fileSimpleName;
+    }
+
 }
 
