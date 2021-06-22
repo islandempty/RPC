@@ -16,7 +16,7 @@ import java.io.IOException;
 
 @Ignore
 public class ApplicationTest {
-    // 热更新教程，需要添加JVM参数，-Djdk.attach.allowAttachSelf=true，如果不加这个参数将使用Byte Buddy热更新替代Javassist热更新
+
     // 使用Javassist热更新更加的轻量，如果Javassist热更新失败，则会自动使用Byte Buddy做热更新
 
     @Test

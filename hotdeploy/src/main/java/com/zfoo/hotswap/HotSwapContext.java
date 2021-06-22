@@ -18,7 +18,6 @@ public class HotSwapContext {
         return HotSwapServiceMBean.getSingleInstance();
     }
 
-
     public static HotSwapManager getHotSwapManager(){
         return HotSwapManager.getInstance();
     }
