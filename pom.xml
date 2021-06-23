@@ -12,6 +12,7 @@
         <module>hotdeploy</module>
         <module>util</module>
         <module>protocol</module>
+        <module>storage</module>
     </modules>
 
     <properties>

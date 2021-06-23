@@ -8,6 +8,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="protocol" />
         <module name="hotswap" />
+        <module name="storage" />
         <module name="util" />
         <module name="hotdeploy" />
       </profile>
