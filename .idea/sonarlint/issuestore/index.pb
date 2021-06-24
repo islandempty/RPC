@@ -8,8 +8,6 @@ E
 protocol/protocol.iml,3\8\388b494954810e12020c331211fd02ccb4791ba0
 A
 hotdeploy/pom.xml,6\e\6e9b5f1f782bacc7eda9a7dcd66715a21b0a0286
-@
-protocol/pom.xml,3\7\376f388d1587476ac2ed6c971ed6afa58058c3ba
 w
 Gprotocol/src/main/java/com/zfoo/protocol/exception/AssertException.java,4\f\4ff441b3bddeff9e9021abaa1d1035b16fec204d
 q
@@ -54,3 +52,13 @@ l
 <hotdeploy/src/main/java/com/zfoo/hotswap/HotSwapContext.java,a\c\aca7145bcac2c348fc9a567a5ae93b4cac1f0752
 <
 util/pom.xml,c\0\c051587fcbc2f445d6e459e1ef985d9153560261
+i
+9storage/src/main/java/com/zfoo/storage/model/anno/Id.java,3\2\32a1bac284ca889e8c6a80e40d72b8a52e1310b0
+u
+Eprotocol/src/main/java/com/zfoo/protocol/exception/POJOException.java,0\5\05d9570394a260467a2c691b35c6263773116600
+?
+storage/pom.xml,9\e\9e34c5209ff0afe186647ec12396ee06bd064f47
+7
+pom.xml,4\4\442292b8a7efeabbe4cc176709b833b1792140ec
+o
+?storage/src/main/java/com/zfoo/storage/model/anno/Resource.java,9\0\90d48758ee473050028ea71fb683a671498b5d63

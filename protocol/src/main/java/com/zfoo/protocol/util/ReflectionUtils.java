@@ -258,9 +258,10 @@ public abstract class ReflectionUtils {
                         throw new RuntimeException(StringUtils.format("field:[{}] can not be name of 'is' in class:[{}]", field.getName(), clazz.getCanonicalName()));
                 }
 
-                //大写
+                //get+首字母大写
                 var methodName = "get" +StringUtils.capitalize(fieldName);
                 try {
+                        //查询是否有该字段的get方法,没有则捕获异常
                         clazz.getDeclaredMethod(methodName , null);
                         return methodName;
                 } catch (NoSuchMethodException e) {
