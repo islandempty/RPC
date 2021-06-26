@@ -1,5 +1,6 @@
 package com.zfoo.storage.strategy;
 
+import com.zfoo.protocol.util.JsonUtils;
 import com.zfoo.protocol.util.StringUtils;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.ConditionalGenericConverter;
@@ -40,7 +41,7 @@ public class JsonToArrayConverter implements ConditionalGenericConverter {
         }else {
             clazz = targetType.getObjectType();
         }
-        return null;
+        return JsonUtils.string2Array(content,clazz);
     }
 }
 
