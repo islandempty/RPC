@@ -13,6 +13,9 @@
         <module>util</module>
         <module>protocol</module>
         <module>storage</module>
+        <module>net</module>
+        <module>event</module>
+        <module>scheduler</module>
     </modules>
 
     <properties>

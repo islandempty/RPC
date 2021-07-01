@@ -6,12 +6,16 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="scheduler" />
         <module name="protocol" />
+        <module name="util" />
         <module name="hotswap" />
         <module name="storage" />
-        <module name="util" />
+        <module name="net" />
+        <module name="event" />
         <module name="hotdeploy" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel target="11" />
   </component>
 </project>

@@ -20,6 +20,9 @@ public class CellUtils {
     }
 
 
+    public static String getCellStringValue(Cell cell) {
+        return getCellValue(cell).toString().trim();
+    }
     /**
      * 获取单元格的值
      * 如果单元格值为数字格式，则判断其格式中是否有小数部分，无则返回Long类型，否则返回Double类型
