@@ -69,13 +69,6 @@ public class SchedulerContext implements ApplicationListener<ApplicationContextE
             //初始化上下文
             SchedulerContext.instance = this;
             instance.applicationContext = event.getApplicationContext();
-            //获取 Spring 容器中定义的所有 JavaBean 的名称
-            var names = applicationContext.getBeanDefinitionNames();
-            var processor = applicationContext.getBean(SchedulerRegisterProcessor.class);
-
-            for (var beanName : names){
-                processor.postProcessAfterInitialization(applicationContext.getBean(beanName),beanName);
-            }
         }else if (event instanceof ContextClosedEvent){
             shutdown();
         }

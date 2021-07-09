@@ -6,7 +6,6 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="scheduler" />
         <module name="protocol" />
         <module name="util" />
         <module name="hotswap" />
@@ -15,7 +14,15 @@
         <module name="event" />
         <module name="hotdeploy" />
       </profile>
+      <profile name="Annotation profile for RPC" enabled="true">
+        <sourceOutputDir name="../event/target/generated-sources/annotations" />
+        <sourceTestOutputDir name="../event/target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="scheduler" />
+      </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel target="11" />
+    <bytecodeTargetLevel target="11">
+      <module name="monitor" target="1.8" />
+    </bytecodeTargetLevel>
   </component>
 </project>

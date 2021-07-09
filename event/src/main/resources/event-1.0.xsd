@@ -11,9 +11,6 @@
             attributeFormDefault="unqualified">
 
     <xsd:element name="event">
-        <xsd:complexType>
-            <xsd:attribute name="id" type="xsd:string" use="required"/>
-        </xsd:complexType>
     </xsd:element>
 
 

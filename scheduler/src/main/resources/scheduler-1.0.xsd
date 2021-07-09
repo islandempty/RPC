@@ -8,9 +8,6 @@
             elementFormDefault="qualified"
             attributeFormDefault="unqualified">
     <xsd:element name="scheduler">
-        <xsd:complexType>
-            <xsd:attribute name="id" type="xsd:string" use="required"/>
-        </xsd:complexType>
     </xsd:element>
 
 
