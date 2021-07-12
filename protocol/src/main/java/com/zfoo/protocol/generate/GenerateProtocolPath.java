@@ -1,57 +1,107 @@
 package com.zfoo.protocol.generate;
 
-import com.zfoo.protocol.registration.IProtocolRegistration;
-import com.zfoo.protocol.util.ReflectionUtils;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Predicate;
+import com.zfoo.protocol.collection.CollectionUtils;
+import com.zfoo.protocol.collection.tree.GeneraTree;
+import com.zfoo.protocol.collection.tree.TreeNode;
+import com.zfoo.protocol.registration.IProtocolRegistration;
+import com.zfoo.protocol.util.AssertionUtils;
+import com.zfoo.protocol.util.StringUtils;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.zfoo.protocol.util.StringUtils.TAB;
 /**
  * @author islandempty
  * @since 2021/7/8
  **/
 public abstract class GenerateProtocolPath {
+    // 临时变量，启动完成就会销毁，协议生成的路径
+    private static Map<Short, String> tempProtocolPathMap = new HashMap<>();
+
+    public static void clear() {
+        tempProtocolPathMap.clear();
+        tempProtocolPathMap = null;
+    }
+
     /**
-     * 生成协议的过滤器，默认不过滤
+     * 获取协议生成的路径
      */
-    public static Predicate<IProtocolRegistration> generateProtocolFilter = registration -> true;
+    public static String getProtocolPath(short protocolId){
+        AssertionUtils.notNull(tempProtocolPathMap, "[{}]已经初始完成，初始化完成过后不能调用getProtocolPath", GenerateProtocolPath.class.getSimpleName());
 
-    public static AtomicInteger index = new AtomicInteger();
+        var protocolPath = tempProtocolPathMap.get(protocolId);
+        if (StringUtils.isBlank(protocolPath)){
+            return StringUtils.EMPTY;
+        }
 
-    public static StringBuilder addTab(StringBuilder builder , int deep){
-        //重复 count 次的串联
-        builder.append(TAB.repeat((Math.max(0,deep))));
-        return builder;
+        return protocolPath.replaceAll(StringUtils.PERIOD_REGEX,StringUtils.SLASH);
     }
-    public static void clear(){
-        generateProtocolFilter = null;
-        index = null;
-    }
-    public static void generate(IProtocolRegistration[] protocols, GenerateOperation generateOperation)throws IOException {
-        //如果没有生成的协议直接返回
-        var generateProtocolFlag = Arrays.stream(generateOperation.getClass().getDeclaredFields())
-                .filter(it -> it.getName().startsWith("generate"))
-                .peek(it -> ReflectionUtils.makeAccessible(it))
-                .map(it -> ReflectionUtils.getField(it, generateOperation))
-                .filter(it -> it instanceof Boolean)
-                .anyMatch(it -> ((Boolean) it).booleanValue() == true);
 
-        if (!generateProtocolFlag){
+    /**
+     * 获取协议生成的首字母大写的路径
+     */
+    public static String getCapitalizeProtocolPath(short protocolId){
+        return StringUtils.joinWith(StringUtils.SLASH, Arrays.stream(getProtocolPath(protocolId).split(StringUtils.SLASH)).map(it -> StringUtils.capitalize(it)).toArray());
+    }
+    /**
+     * 解析协议的路径
+     *
+     * @param protocolRegistrations 需要解析的路径
+     */
+    public static void initProtocolPath(List<IProtocolRegistration> protocolRegistrations){
+        AssertionUtils.notNull(tempProtocolPathMap, "[{}]已经初始完成，初始化完成过后不能调用initProtocolPath", GenerateProtocolPath.class.getSimpleName());
+
+        // 将需要生成的协议的路径添加到多叉树中
+        var protocolPathTree = new GeneraTree<IProtocolRegistration>();
+        protocolRegistrations.forEach(it -> protocolPathTree.addNode(it.protocolConstructor().getDeclaringClass().getCanonicalName(),it));
+
+        var rootTreeNode = protocolPathTree.getRootNode();
+
+        if (CollectionUtils.isEmpty(rootTreeNode.getChildren())){
             return;
         }
-        // 外层需要生成的协议
-        var outsideGenerateProtocols = Arrays.stream(protocols)
-                .filter(it -> Objects.nonNull(it))
-                .filter(it -> generateProtocolFilter.test(it))
-                .collect(Collectors.toList());
 
+        var queue = new LinkedList<>(rootTreeNode.getChildren());
+        while (!queue.isEmpty()) {
+            var childTreeNode = queue.poll();
+            var childChildren = childTreeNode.getChildren();
+            // 如果子节点为空，则以当前节点为路径
+            if (CollectionUtils.isEmpty(childChildren)) {
+                toProtocolPath(childTreeNode);
+                continue;
+            }
+
+            // 如果子节点的协议数据有一个不为空的，则以当前节点为路径
+            if (childChildren.stream().anyMatch(it -> it.getData() != null)) {
+                toProtocolPath(childTreeNode);
+                continue;
+            }
+
+            // 继续深度便利子节点的路径
+            for (var subClassId : childTreeNode.getChildren()) {
+                queue.offer(subClassId);
+            }
+        }
+    }
+
+    private static void toProtocolPath(TreeNode<IProtocolRegistration> protocolTreeNode){
+        var allChildren = protocolTreeNode.flatTreeNodes()
+                .stream()
+                .filter(it -> it.getData() != null)
+                .collect(Collectors.toList());
+        var pathBefore = StringUtils.substringBeforeLast(protocolTreeNode.fullName(), StringUtils.PERIOD);
+        for (var child :allChildren){
+            var protocolSimpleName = child.getData().protocolConstructor().getDeclaringClass().getSimpleName();
+            var splits = Arrays.stream(StringUtils.substringBeforeLast(StringUtils.substringAfterFirst(child.fullName(), pathBefore), protocolSimpleName)
+                    .split(StringUtils.PERIOD_REGEX))
+                    .filter(it -> !StringUtils.isBlank(it))
+                    .toArray();
+            tempProtocolPathMap.put(child.getData().protocolId(),StringUtils.joinWith(StringUtils.PERIOD,splits));
+        }
 
     }
+
+
 }
 

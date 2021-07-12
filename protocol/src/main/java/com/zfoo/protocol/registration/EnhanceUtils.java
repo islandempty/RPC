@@ -1,7 +1,5 @@
 package com.zfoo.protocol.registration;
 
-import com.fasterxml.jackson.databind.ser.std.BooleanSerializer;
-import com.fasterxml.jackson.databind.ser.std.StringSerializer;
 import com.zfoo.protocol.IPacket;
 import com.zfoo.protocol.buffer.ByteBufUtils;
 import com.zfoo.protocol.collection.ArrayUtils;

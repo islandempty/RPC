@@ -16,7 +16,6 @@
         <module>net</module>
         <module>event</module>
         <module>scheduler</module>
-        <module>monitor</module>
     </modules>
 
     <properties>

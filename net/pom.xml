@@ -107,26 +107,12 @@
     </properties>
 
     <dependencies>
-        <!--<dependency>
-            <groupId>com.zfoo</groupId>
+        <dependency>
+            <groupId>com.ie</groupId>
             <artifactId>util</artifactId>
-            <version>${zfoo.util.version}</version>
+            <version>1.0</version>
         </dependency>
-        <dependency>
-            <groupId>com.zfoo</groupId>
-            <artifactId>event</artifactId>
-            <version>${zfoo.event.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.zfoo</groupId>
-            <artifactId>scheduler</artifactId>
-            <version>${zfoo.util.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.zfoo</groupId>
-            <artifactId>protocol</artifactId>
-            <version>${zfoo.protocol.version}</version>
-        </dependency>-->
+
 
         <!-- 依赖的通信类库 -->
         <dependency>

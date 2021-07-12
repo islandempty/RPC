@@ -1,12 +1,19 @@
 package com.zfoo.protocol.generate;
 
 import com.zfoo.protocol.model.Pair;
+import com.zfoo.protocol.registration.IProtocolRegistration;
 import com.zfoo.protocol.util.AssertionUtils;
+import com.zfoo.protocol.util.FileUtils;
 import com.zfoo.protocol.util.StringUtils;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import static com.zfoo.protocol.util.FileUtils.LS;
 
 /**
  *
@@ -24,8 +31,6 @@ public abstract class GenerateProtocolDocument {
      * // 复杂的对象
      * // 包括了各种复杂的结构，数组，List，Set，Map
      * //
-     * // @author jaysunxiao
-     * // @version 1.0
      * <p>
      * value aa:
      * // byte的包装类型
@@ -50,7 +55,113 @@ public abstract class GenerateProtocolDocument {
         return protocolDocument;
     }
 
+    public static void initProtocolDocument(List<IProtocolRegistration> protocolRegistrations) {
+        AssertionUtils.notNull(tempProtocolDocumentMap, "[{}]已经初始完成，初始化完成过后不能调用initProtocolDocument", GenerateProtocolDocument.class.getSimpleName());
 
+        for (var protocolRegistration : protocolRegistrations) {
+            var protocolClazzName = protocolRegistration.protocolConstructor().getDeclaringClass().getSimpleName();
+
+            // 文件的注释生成
+            var proAbsFile = new File(FileUtils.getProAbsPath());
+            var list = FileUtils.getAllReadableFiles(proAbsFile.getParentFile() == null ? proAbsFile : proAbsFile.getParentFile());
+            var protocolFile = list.stream()
+                    .filter(it -> it.getName().equals(StringUtils.format("{}.java", protocolClazzName)))
+                    .findFirst();
+
+            // 如果搜索不到协议文件则直接返回
+            if (protocolFile.isEmpty()) {
+                continue;
+            }
+
+            var docFieldMap = new HashMap<String, String>();
+            var docTitle = StringUtils.EMPTY;
+
+            var protocolStringList = FileUtils.readFileToStringList(protocolFile.get())
+                    .stream()
+                    .dropWhile(it -> !it.startsWith("package")) // 过滤掉package之上的版权信息
+                    .collect(Collectors.toList());
+
+            // 搜索包名，报名不匹配则直接返回
+            var protocolClassTitle = StringUtils.format("public class {}", protocolClazzName);
+            if (protocolStringList.stream().noneMatch(it -> it.contains(protocolClassTitle))) {
+                continue;
+            }
+
+            protocolStringList = protocolStringList.stream()
+                    .dropWhile(it -> !it.startsWith("package"))
+                    .collect(Collectors.toList());
+
+            var docBuilder = new StringBuilder();
+            var docTitleBuilder = new StringBuilder();
+            for (var line : protocolStringList) {
+                var startLineStr = line.trim();
+
+                // 排除java的包头
+                if (startLineStr.startsWith("package") || startLineStr.startsWith("import")) {
+                    continue;
+                }
+
+
+                if (startLineStr.startsWith("public class ")) {
+                    if (docTitleBuilder != null) {
+                        docTitle = docTitleBuilder.toString();
+                        docTitle = docTitle.replace("/**", StringUtils.EMPTY);
+                        docTitle = docTitle.replace(" */", StringUtils.EMPTY);
+                        docTitle = docTitle.replace(" *", "//");
+                        docTitle = docTitle.trim();
+                        docBuilder = new StringBuilder();
+                        docTitleBuilder = null;
+                    }
+                } else {
+                    if (docTitleBuilder != null) {
+                        docTitleBuilder.append(line).append(LS);
+                    }
+                }
+
+                // 保留注释
+                if (startLineStr.startsWith("*/")) {
+                    continue;
+                }
+
+                if (startLineStr.startsWith("//") || startLineStr.startsWith("*")) {
+                    startLineStr = startLineStr.replaceFirst("//", StringUtils.EMPTY);
+                    startLineStr = startLineStr.replaceFirst("\\*", StringUtils.EMPTY);
+                    docBuilder.append("//").append(startLineStr).append(LS);
+                    continue;
+                }
+
+                if (startLineStr.startsWith("private static ")) {
+                    continue;
+                }
+
+                if (startLineStr.contains(" transient ")) {
+                    continue;
+                }
+
+                if (startLineStr.startsWith("public void set") || startLineStr.startsWith("public bool equals")
+                        || startLineStr.startsWith("public int hashCode") || startLineStr.startsWith("@Override")) {
+                    continue;
+                }
+
+                if (startLineStr.endsWith("{") || startLineStr.startsWith("return ") || startLineStr.startsWith("}")) {
+                    continue;
+                }
+
+                if (!startLineStr.endsWith(";")) {
+                    continue;
+                }
+                if (!(startLineStr.startsWith("private ") || startLineStr.startsWith("public "))) {
+                    continue;
+                }
+
+                var fieldName = StringUtils.substringBeforeLast(StringUtils.substringAfterLast(startLineStr, StringUtils.SPACE), StringUtils.SEMICOLON).trim();
+                docFieldMap.put(fieldName, docBuilder.toString());
+                docBuilder = new StringBuilder();
+            }
+
+            tempProtocolDocumentMap.put(protocolRegistration.protocolId(), new Pair<>(docTitle, docFieldMap));
+        }
+    }
 
 }
 
