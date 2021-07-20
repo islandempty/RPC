@@ -20,18 +20,16 @@
 
 
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
         <!-- 本项目的其它module版本号 -->
-        <ie.event.version>1.0</ie.event.version>
-        <ie.hotswap.version>1.0</ie.hotswap.version>
-        <ie.monitor.version>1.0</ie.monitor.version>
-        <ie.net.version>1.0</ie.net.version>
-        <ie.scheduler.version>1.0</ie.scheduler.version>
-        <ie.storage.version>1.0</ie.storage.version>
-        <ie.orm.version>1.0</ie.orm.version>
-        <ie.protocol.version>1.0</ie.protocol.version>
-        <ie.util.version>1.0</ie.util.version>
+        <zfoo.event.version>3.0</zfoo.event.version>
+        <zfoo.hotswap.version>3.0</zfoo.hotswap.version>
+        <zfoo.monitor.version>3.0</zfoo.monitor.version>
+        <zfoo.net.version>3.0</zfoo.net.version>
+        <zfoo.scheduler.version>3.0</zfoo.scheduler.version>
+        <zfoo.storage.version>3.0</zfoo.storage.version>
+        <zfoo.orm.version>3.0</zfoo.orm.version>
+        <zfoo.protocol.version>3.0</zfoo.protocol.version>
+        <zfoo.util.version>3.0</zfoo.util.version>
 
 
         <!-- 核心spring框架 -->
@@ -117,7 +115,7 @@
         <dependency>
             <groupId>com.ie</groupId>
             <artifactId>protocol</artifactId>
-            <version>${ie.protocol.version}</version>
+            <version>1.0</version>
         </dependency>
 
         <!-- 依赖的Spring模块类库 -->
@@ -196,14 +194,6 @@
             </plugin>
 
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>10</source>
-                    <target>10</target>
-                </configuration>
-            </plugin>
             <!-- 测试插件 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
