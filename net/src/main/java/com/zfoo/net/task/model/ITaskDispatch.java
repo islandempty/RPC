@@ -4,5 +4,5 @@ import java.util.concurrent.ExecutorService;
 
 public interface ITaskDispatch {
 
-    ExecutorService getExecutor()
+    ExecutorService getExecutor(ReceiveTask receiveTask);
 }
