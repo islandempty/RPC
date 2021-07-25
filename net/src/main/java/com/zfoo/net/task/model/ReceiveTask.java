@@ -1,5 +1,6 @@
 package com.zfoo.net.task.model;
 
+import com.zfoo.net.NetContext;
 import com.zfoo.net.packet.model.IPacketAttachment;
 import com.zfoo.net.session.model.Session;
 import com.zfoo.protocol.IPacket;
@@ -21,7 +22,7 @@ public class ReceiveTask implements Runnable{
 
     @Override
     public void run() {
-
+        NetContext.getDispatcher().atReceive(session, packet, packetAttachment);
     }
 
     public Session getSession() {

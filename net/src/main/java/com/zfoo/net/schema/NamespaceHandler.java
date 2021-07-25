@@ -12,7 +12,7 @@ public class NamespaceHandler extends NamespaceHandlerSupport {
 
     @Override
     public void init() {
-        registerBeanDefinitionParser(NET_TAG,new NetDe);
+        registerBeanDefinitionParser(NET_TAG,new NetDefinitionParser());
     }
 }
 

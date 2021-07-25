@@ -2,9 +2,13 @@ package com.zfoo.net.core.tcp;
 
 import com.ie.util.net.HostAndPort;
 import com.zfoo.net.core.AbstractClient;
+import com.zfoo.net.handler.ClientDispatcherHandler;
+import com.zfoo.net.handler.codec.tcp.TcpCodeHandler;
+import com.zfoo.net.handler.idle.ClientIdleHandler;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 
 /**
  * @author islandempty
@@ -25,7 +29,11 @@ public class TcpClient extends AbstractClient {
     private static class ChannelHandlerInitializer extends ChannelInitializer<SocketChannel>{
         @Override
         protected void initChannel(SocketChannel socketChannel) throws Exception {
-            //TODO
+            //心跳检测
+            socketChannel.pipeline().addLast(new IdleStateHandler(0,0,60));
+            socketChannel.pipeline().addLast(new ClientIdleHandler());
+            socketChannel.pipeline().addLast(new TcpCodeHandler());
+            socketChannel.pipeline().addLast(new ClientDispatcherHandler());
         }
     }
 }

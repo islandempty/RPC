@@ -24,6 +24,7 @@ public class Heartbeat implements IPacket {
     public short protocolId() {
         return protocolId();
     }
+
     public static short heartbeatProtocolId(){
         return PROTOCOL_ID;
     }
