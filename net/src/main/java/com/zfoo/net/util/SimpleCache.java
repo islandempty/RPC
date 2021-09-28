@@ -69,6 +69,7 @@ public class SimpleCache<K, V> {
 
                     @Override
                     public @Nullable V reload(@NonNull K key, @NonNull V oldValue) throws Exception {
+
                         linkedQueue.offer(key);
                         // 先返回老的值，等周期任务刷新新的值
                         return oldValue;
@@ -88,7 +89,7 @@ public class SimpleCache<K, V> {
                         list.clear();
                     }
                 }
-                //如果list没有1000个缓存
+                //如果要更新的list不足1000个缓存
                 if (CollectionUtils.isNotEmpty(list)){
                     var result = batchReloadCallback.apply(list);
                     result.forEach(it -> cache.put(it.getKey(), it.getValue()));

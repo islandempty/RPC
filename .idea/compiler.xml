@@ -9,13 +9,14 @@
         <module name="scheduler" />
         <module name="protocol" />
         <module name="util" />
-        <module name="hotswap" />
-        <module name="storage" />
         <module name="net" />
         <module name="event" />
         <module name="hotdeploy" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel target="11" />
+    <bytecodeTargetLevel target="11">
+      <module name="hotswap" target="11" />
+      <module name="storage" target="11" />
+    </bytecodeTargetLevel>
   </component>
 </project>
