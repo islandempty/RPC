@@ -68,7 +68,7 @@ public abstract class TimeUtils {
     };
 
     static {
-        SchedulerBus.scheduler(new Runnable() {
+        SchedulerBus.schedule(new Runnable() {
             @Override
             public void run() {
                 currentTimeMillis();

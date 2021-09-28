@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
  **/
 public abstract class AbstractConsumerLoadBalancer implements IConsumerLoadBalancer{
 
-    public static AbstractConsumerLoadBalancer valueOf(String loadBalancer){
+    public static AbstractConsumerLoadBalancer valueOf(String loadBalancer) {
         AbstractConsumerLoadBalancer balancer;
         switch (loadBalancer) {
             case "random":
@@ -38,18 +38,18 @@ public abstract class AbstractConsumerLoadBalancer implements IConsumerLoadBalan
         return balancer;
     }
 
-    public List<Session> getSessionByPacket(IPacket packet){
-        return getSessionByModule(ProtocolManager.moduleByProtocolId(packet.protocolId()));
+    public List<Session> getSessionsByPacket(IPacket packet) {
+        return getSessionsByModule(ProtocolManager.moduleByProtocolId(packet.protocolId()));
     }
 
-    public List<Session> getSessionByModule(ProtocolModule module){
+    public List<Session> getSessionsByModule(ProtocolModule module) {
         var clientSessionMap = NetContext.getSessionManager().getClientSessionMap();
         var sessions = clientSessionMap.values().stream()
-                .filter(it ->{
+                .filter(it -> {
                     var attribute = it.getAttribute(AttributeType.CONSUMER);
-                    if (Objects.nonNull(attribute)){
-                        var registerVo = (RegisterVO) attribute;
-                        if (Objects.nonNull(registerVo.getProviderConfig())&&registerVo.getProviderConfig().getModules().contains(module)){
+                    if (Objects.nonNull(attribute)) {
+                        var registerVO = (RegisterVO) attribute;
+                        if (Objects.nonNull(registerVO.getProviderConfig()) && registerVO.getProviderConfig().getModules().contains(module)) {
                             return true;
                         } else {
                             return false;
@@ -57,18 +57,21 @@ public abstract class AbstractConsumerLoadBalancer implements IConsumerLoadBalan
                     } else {
                         return false;
                     }
-                }).collect(Collectors.toList());
+                })
+                .collect(Collectors.toList());
         return sessions;
     }
 
-    public boolean sessionHasModule(Session session, IPacket packet){
+
+    public boolean sessionHasModule(Session session, IPacket packet) {
+
         var attribute = session.getAttribute(AttributeType.CONSUMER);
-        if (Objects.isNull(attribute)){
+        if (Objects.isNull(attribute)) {
             return false;
         }
 
         var registerVO = (RegisterVO) attribute;
-        if (Objects.isNull(registerVO.getProviderConfig())){
+        if (Objects.isNull(registerVO.getProviderConfig())) {
             return false;
         }
 

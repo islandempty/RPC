@@ -26,95 +26,102 @@ public abstract class SchedulerBus {
     private static final List<SchedulerDefinition> schedulerDefList = new CopyOnWriteArrayList<>();
 
     /**
-     * 上次trigger触发时间
+     * 上一次trigger触发时间
      */
-    private static long lastTriggerTimestamp =0;
+    private static long lastTriggerTimestamp = 0L;
+
 
     /**
      * 在scheduler中，最小的triggerTimestamp
      */
-    private static long minSchedulerTriggerTimestamp = 0;
+    private static long minTriggerTimestamp = 0L;
+
 
     public static final long TRIGGER_MILLIS_INTERVAL = TimeUtils.MILLIS_PER_SECOND;
+
     /**
      * scheduler默认只有一个单线程的线程池
-     * ScheduledExecutorService执行定时任务
      */
     private static final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(new SchedulerThreadFactory(1));
 
+
     static {
-        //执行线程   初始化延时  两次开始执行最小间隔时间  计时单位
         executor.scheduleAtFixedRate(() -> {
             try {
                 triggerPerSecond();
-            } catch (Exception e){
+            } catch (Exception e) {
                 logger.error("scheduler triggers an error.", e);
             }
-        },3 * TimeUtils.MILLIS_PER_SECOND , TRIGGER_MILLIS_INTERVAL , TimeUnit.MILLISECONDS);
+        }, 0, TRIGGER_MILLIS_INTERVAL, TimeUnit.MILLISECONDS);
     }
 
-    private static long minSchedulerTriggerTimestamp(){
-        var minSchedulerOptional = schedulerDefList.stream().min(Comparator.comparingLong(schedulerDef -> schedulerDef.getTriggerTimestamp()));
-        if (minSchedulerOptional.isPresent()){
-            return minSchedulerOptional.get().getTriggerTimestamp();
-        }else {
-            logger.error("schedulerDefList:[{}] has no minSchedulerTriggerTimestamp to return. ", JsonUtils.object2String(schedulerDefList));
-            return 0;
+
+    public static void refreshMinTriggerTimestamp() {
+        var minTimestamp = Long.MAX_VALUE;
+        for (var scheduler : schedulerDefList) {
+            if (scheduler.getTriggerTimestamp() < minTimestamp) {
+                minTimestamp = scheduler.getTriggerTimestamp();
+            }
         }
+        minTriggerTimestamp = minTimestamp;
     }
 
     /**
      * 每一秒执行一次，如果这个任务执行时间过长超过，比如10秒，执行完成后，不会再执行10次
      */
-    private static void triggerPerSecond(){
+    private static void triggerPerSecond() {
         var timestamp = TimeUtils.currentTimeMillis();
 
-        if (CollectionUtils.isEmpty(schedulerDefList)){
+        if (CollectionUtils.isEmpty(schedulerDefList)) {
             return;
         }
-        /**
-         * 有人向前调整过机器时间，重新计算scheduler里的triggerTimestamp
-         */
-        if (timestamp < lastTriggerTimestamp){
-            for (SchedulerDefinition schedulerDef:schedulerDefList){
+
+
+        // 有人向前调整过机器时间，重新计算scheduler里的triggerTimestamp
+        // var diff = timestamp - lastTriggerTimestamp;
+        if (timestamp < lastTriggerTimestamp) {
+            for (SchedulerDefinition schedulerDef : schedulerDefList) {
                 var nextTriggerTimestamp = TimeUtils.getNextTimestampByCronExpression(schedulerDef.getCronExpression(), timestamp);
                 schedulerDef.setTriggerTimestamp(nextTriggerTimestamp);
             }
-            minSchedulerTriggerTimestamp =minSchedulerTriggerTimestamp();
+            refreshMinTriggerTimestamp();
         }
+
         // diff > 0, 没有人调整时间或者有人向后调整过机器时间，可以忽略，因为向后调整时间时间戳一定会大于triggerTimestamp，所以一定会触发
         lastTriggerTimestamp = timestamp;
 
         // 如果minSchedulerTriggerTimestamp大于timestamp，说明没有可执行的scheduler
-        if (timestamp <minSchedulerTriggerTimestamp){
+        if (timestamp < minTriggerTimestamp) {
             return;
         }
 
-        for (var schedulerDef  : schedulerDefList){
-            if (timestamp >= schedulerDef.getTriggerTimestamp()){
-                //到达触发时间，则执行runnable方法
-                schedulerDef.getScheduler().invoke();
-                //重新设置一下下一次触发的时间
-                var nextTriggerTimestamp = TimeUtils.getNextTimestampByCronExpression(schedulerDef.getCronExpression(), timestamp);
-                schedulerDef.setTriggerTimestamp(nextTriggerTimestamp);
+        var minTimestamp = Long.MAX_VALUE;
+        for (var scheduler : schedulerDefList) {
+            if (timestamp >= scheduler.getTriggerTimestamp()) {
+                // 到达触发时间，则执行runnable方法
+                scheduler.getScheduler().invoke();
+                // 重新设置下一次的触发时间戳
+                var nextTriggerTimestamp = TimeUtils.getNextTimestampByCronExpression(scheduler.getCronExpression(), timestamp);
+                scheduler.setTriggerTimestamp(nextTriggerTimestamp);
+            }
+            if (scheduler.getTriggerTimestamp() < minTimestamp) {
+                minTimestamp = scheduler.getTriggerTimestamp();
             }
         }
-        minSchedulerTriggerTimestamp = minSchedulerTriggerTimestamp();
+        minTriggerTimestamp = minTimestamp;
     }
 
-    public static void registerScheduler(SchedulerDefinition schedulerDefinition){
-        schedulerDefList.add(schedulerDefinition);
-        minSchedulerTriggerTimestamp =minSchedulerTriggerTimestamp();
+    public static void registerScheduler(SchedulerDefinition scheduler) {
+        schedulerDefList.add(scheduler);
+        refreshMinTriggerTimestamp();
     }
+
 
     /**
-     *不断执行周期任务
-     * @param runnable
-     * @param period 两次开始执行最小间隔时间
-     * @param unit 计时单位
+     * 不断执行的周期循环任务
      */
-    public static void schedulerAtFixedRate(Runnable runnable,long period ,TimeUnit unit){
-        if (SchedulerContext.isStop()){
+    public static void scheduleAtFixedRate(Runnable runnable, long period, TimeUnit unit) {
+        if (SchedulerContext.isStop()) {
             return;
         }
 
@@ -129,10 +136,15 @@ public abstract class SchedulerBus {
                     logger.error("scheduleAtFixedRate未知error异常", t);
                 }
             }
-        },0,period,unit);
+        }, 0, period, unit);
     }
-    public static void scheduler(Runnable runnable,long delay ,TimeUnit unit){
-        if (SchedulerContext.isStop()){
+
+
+    /**
+     * 固定延迟执行的任务
+     */
+    public static void schedule(Runnable runnable, long delay, TimeUnit unit) {
+        if (SchedulerContext.isStop()) {
             return;
         }
 
@@ -147,18 +159,18 @@ public abstract class SchedulerBus {
                     logger.error("schedule未知error异常", t);
                 }
             }
-        },delay,unit);
+        }, delay, unit);
     }
 
     /**
      * cron表达式执行的任务
      */
-    public void schedulerCron(Runnable runnable, String cron){
-        if (SchedulerContext.isStop()){
+    public static void scheduleCron(Runnable runnable, String cron) {
+        if (SchedulerContext.isStop()) {
             return;
         }
 
-        schedulerDefList.add(SchedulerDefinition.valueOf(cron,runnable));
+        schedulerDefList.add(SchedulerDefinition.valueOf(cron, runnable));
     }
 }
 

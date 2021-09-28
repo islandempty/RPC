@@ -24,7 +24,7 @@ public class ConfigManager implements IConfigManager{
     private static final Logger logger = LoggerFactory.getLogger(ConfigManager.class);
 
     /**
-     * 本地设置
+     * 本地配置
      */
     private NetConfig localConfig;
 
@@ -52,19 +52,19 @@ public class ConfigManager implements IConfigManager{
     @Override
     public void initRegistry() {
         // 通过protocol，写入provider的module的id和version
-        var providerConfig = localConfig.getProviderConfig();
-        if (Objects.nonNull(providerConfig) && CollectionUtils.isNotEmpty(providerConfig.getModules())){
-            var protocolModules = new ArrayList<ProtocolModule>(providerConfig.getModules().size());
-            for (var providerModule : providerConfig.getModules()){
+        var providerConfig = localConfig.getProvider();
+        if (Objects.nonNull(providerConfig) && CollectionUtils.isNotEmpty(providerConfig.getModules())) {
+            var providerModules = new ArrayList<ProtocolModule>(providerConfig.getModules().size());
+            for (var providerModule : providerConfig.getModules()) {
                 var module = ProtocolManager.moduleByModuleName(providerModule.getName());
                 AssertionUtils.isTrue(module != null, "服务提供者[name:{}]在协议文件中不存在", providerModule.getName());
-                protocolModules.add(module);
+                providerModules.add(module);
             }
-            providerConfig.setModules(protocolModules);
+            providerConfig.setModules(providerModules);
         }
 
         // 通过protocol，写入consumer的module的id和version
-        var consumerConfig = localConfig.getConsumerConfig();
+        var consumerConfig = localConfig.getConsumer();
         if (Objects.nonNull(consumerConfig) && CollectionUtils.isNotEmpty(consumerConfig.getModules())) {
             var consumerModules = new ArrayList<ProtocolModule>(consumerConfig.getModules().size());
             for (var providerModule : consumerConfig.getModules()) {

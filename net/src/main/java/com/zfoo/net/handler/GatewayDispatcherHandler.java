@@ -31,11 +31,11 @@ import java.util.function.BiFunction;
  * @since 2021/7/20
  **/
 @ChannelHandler.Sharable
-public class GatewayDispatcherHandler extends BaseDispatcherHandler{
+public class GatewayDispatcherHandler extends BaseDispatcherHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GatewayDispatcherHandler.class);
 
-    private BiFunction<Session, IPacket , Boolean> packetFilter;
+    private BiFunction<Session, IPacket, Boolean> packetFilter;
 
     public GatewayDispatcherHandler(BiFunction<Session, IPacket, Boolean> packetFilter) {
         this.packetFilter = packetFilter;
@@ -43,79 +43,78 @@ public class GatewayDispatcherHandler extends BaseDispatcherHandler{
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        //请求者的session，一般是serverSession
+        // 请求者的session，一般是serverSession
         var session = SessionUtils.getSession(ctx);
-        if (session == null){
+        if (session == null) {
             return;
         }
 
-        var decodedPacketInfo = (DecodedPacketInfo)msg;
+        var decodedPacketInfo = (DecodedPacketInfo) msg;
         var packet = decodedPacketInfo.getPacket();
-        if (packet.protocolId() == Heartbeat.heartbeatProtocolId()){
+        if (packet.protocolId() == Heartbeat.heartbeatProtocolId()) {
             return;
         }
-        if (packet.protocolId() == Ping.pingProtocolId()){
-            NetContext.getDispatcher().send(session , Pong.valueOf(TimeUtils.now()),null);
+        if (packet.protocolId() == Ping.pingProtocolId()) {
+            NetContext.getDispatcher().send(session, Pong.valueOf(TimeUtils.now()), null);
             return;
         }
 
-        //过滤非法包
-        if (packetFilter !=null && packetFilter.apply(session , packet)){
+        // 过滤非法包
+        if (packetFilter != null && packetFilter.apply(session, packet)) {
             throw new IllegalArgumentException(StringUtils.format("[session:{}]发送了一个非法包[{}]"
                     , SessionUtils.sessionInfo(ctx), JsonUtils.object2String(packet)));
         }
 
-        var signalAttachment = (SignalPacketAttachment)decodedPacketInfo.getPacketAttachment();
+        var signalAttachment = (SignalPacketAttachment) decodedPacketInfo.getPacketAttachment();
         var gatewayPacketAttachment = new GatewayPacketAttachment(session, signalAttachment);
 
-        //网关优先使用IGatewayLoadBalancer作为一致性hash的计算参数，然后才会使用客户端的session做参数
-        if (packet instanceof IGatewayLoadBalancer){
+        // 网关优先使用IGatewayLoadBalancer作为一致性hash的计算参数，然后才会使用客户端的session做参数
+        if (packet instanceof IGatewayLoadBalancer) {
             var loadBalancerConsistentHashObject = ((IGatewayLoadBalancer) packet).loadBalancerConsistentHashObject();
             gatewayPacketAttachment.useExecutorConsistentHash(loadBalancerConsistentHashObject);
-            forwardingPacket(packet,gatewayPacketAttachment,loadBalancerConsistentHashObject);
+            forwardingPacket(packet, gatewayPacketAttachment, loadBalancerConsistentHashObject);
             return;
-        }else {
-            //使用用户的uid做一致性hash
+        } else {
+            // 使用用户的uid做一致性hash
             var uid = (Long) session.getAttribute(AttributeType.UID);
-            if (uid != null){
-                forwardingPacket(packet, gatewayPacketAttachment ,uid);
+            if (uid != null) {
+                forwardingPacket(packet, gatewayPacketAttachment, uid);
                 return;
             }
         }
         // 再使用session的sid做一致性hash，因为每次客户端连接过来sid都会改变，所以客户端重写建立连接的话可能会被路由到其它的服务器
         // 如果有特殊需求的话，可以考虑去重写网关的转发策略
         var sid = session.getSid();
-        forwardingPacket(packet,gatewayPacketAttachment,sid);
+        forwardingPacket(packet, gatewayPacketAttachment, sid);
     }
 
-    public void forwardingPacket(IPacket packet, IPacketAttachment attachment, Object argument){
+    /**
+     * 转发网关收到的包
+     */
+    private void forwardingPacket(IPacket packet, IPacketAttachment attachment, Object argument) {
         try {
-            var session = ConsistentHashConsumerLoadBalancer.getInstance().loadBalancer(packet, argument);
-            NetContext.getDispatcher().send(session,packet,attachment);
-        }catch (Exception e){
+            var consumerSession = ConsistentHashConsumerLoadBalancer.getInstance().loadBalancer(packet, argument);
+            NetContext.getDispatcher().send(consumerSession, packet, attachment);
+        } catch (Exception e) {
             logger.error("网关发生异常", e);
-        }catch (Throwable t){
+        } catch (Throwable t) {
             logger.error("网关发生错误", t);
         }
-
     }
-
-
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         var session = SessionUtils.getSession(ctx);
-        if (session == null){
+        if (session == null) {
             return;
         }
 
         var sid = session.getSid();
-        var uid = (Long)session.getAttribute(AttributeType.UID);
+        var uid = (Long) session.getAttribute(AttributeType.UID);
         EventBus.asyncSubmit(GatewaySessionInactiveEvent.valueOf(sid, uid == null ? 0 : uid.longValue()));
 
         super.channelInactive(ctx);
     }
-
 
 }
 

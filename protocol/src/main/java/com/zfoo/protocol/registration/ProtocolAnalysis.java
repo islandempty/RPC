@@ -36,7 +36,8 @@ public class ProtocolAnalysis {
     private static Set<String> tempProtocolReserved = Set.of("Buffer", "ByteBuf", "ByteBuffer", "LittleEndianByteBuffer", "NormalByteBuffer"
             , "IPacket", "IProtocolRegistration", "ProtocolManager", "IFieldRegistration"
             , "ByteBufUtils", "ArrayUtils", "CollectionUtils"
-            , "Boolean", "Byte", "Short", "Integer", "Long", "Float", "Double", "String", "Character", "Object");
+            , "Boolean", "Byte", "Short", "Integer", "Long", "Float", "Double", "String", "Character", "Object"
+            , "Collections", "Iterator", "List", "ArrayList", "Map", "HashMap", "Set", "HashSet");
 
     // 临时变量，启动完成就会销毁，是一个基本类型序列化器
     private static Map<Class<?>, ISerializer> tempBaseSerializerMap = new HashMap<>();
@@ -190,7 +191,7 @@ public class ProtocolAnalysis {
         checkAllModules();
 
         // 生成协议
-        GenerateProtocolFile.generate(protocols, generateOperation);
+        GenerateProtocolFile.generate(generateOperation);
     }
 
     private static void enhanceProtocolAfter() {
@@ -213,7 +214,7 @@ public class ProtocolAnalysis {
 
     private static short checkProtocol(Class<?> clazz) throws IllegalAccessException, InvocationTargetException, InstantiationException {
         // 是否为一个简单的javabean
-        ReflectionUtils.assertIsPOJOClass(clazz);
+        ReflectionUtils.assertIsPojoClass(clazz);
         // 是否实现了IPacket接口
         AssertionUtils.isTrue(IPacket.class.isAssignableFrom(clazz), "[class:{}]没有实现接口[IPacket:{}]", clazz.getCanonicalName(), IPacket.class.getCanonicalName());
         // 不能是泛型类
@@ -238,12 +239,8 @@ public class ProtocolAnalysis {
         AssertionUtils.isTrue(clazz.getSimpleName().matches("[a-zA-Z0-9_]*"), "[class:{}]的命名只能包含字母，数字，下划线", clazz.getCanonicalName(), PROTOCOL_ID);
 
         // 必须要有一个空的构造器
-        Constructor<?> constructor;
-        try {
-            constructor = clazz.getDeclaredConstructor();
-        } catch (NoSuchMethodException e) {
-            throw new UnknownException(e, "[class:{}]协议序列号[{}]必须有一个空的构造器", clazz.getCanonicalName(), PROTOCOL_ID);
-        }
+        Constructor<?> constructor = ReflectionUtils.publicEmptyConstructor(clazz);
+
         ReflectionUtils.makeAccessible(protocolIdField);
         IPacket packet = (IPacket) constructor.newInstance();
 
@@ -451,7 +448,7 @@ public class ProtocolAnalysis {
             } else if (List.class.equals(clazz)) {
                 // List<List<String>>
                 IFieldRegistration registration = typeToRegistration(currentProtocolClass, ((ParameterizedType) type).getActualTypeArguments()[0]);
-                return ListField.valueOf(registration, (ParameterizedType) type);
+                return ListField.valueOf(registration, type);
             } else if (Map.class.equals(clazz)) {
                 // Map<List<String>, List<String>>
                 IFieldRegistration keyRegistration = typeToRegistration(currentProtocolClass, ((ParameterizedType) type).getActualTypeArguments()[0]);
@@ -480,7 +477,7 @@ public class ProtocolAnalysis {
         throw new RunException("[type:{}]类型不正确", type);
     }
 
-    private static short getProtocolIdByClass(Class<?> clazz) {
+    public static short getProtocolIdByClass(Class<?> clazz) {
         var protocolIdField = ReflectionUtils.getFieldByNameInPOJOClass(clazz, PROTOCOL_ID);
         ReflectionUtils.makeAccessible(protocolIdField);
         return (short) ReflectionUtils.getField(protocolIdField, null);

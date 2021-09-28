@@ -12,7 +12,18 @@ public interface IProtocolRegistration {
 
     Constructor<?> protocolConstructor();
 
-    Object read(ByteBuf buffer);
+    /**
+     * 协议接收器，回调方法，主要是存放一些额外的参数
+     */
+    Object receiver();
 
-    void write(ByteBuf buffer , IPacket packet);
+    /**
+     * 序列化
+     */
+    void write(ByteBuf buffer, IPacket packet);
+
+    /**
+     * 反序列化
+     */
+    Object read(ByteBuf buffer);
 }

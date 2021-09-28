@@ -19,7 +19,6 @@ public interface ISessionManager {
     Map<Long, Session> getServerSessionMap();
 
 
-
     void addClientSession(Session session);
 
     void removeClientSession(Session session);
@@ -28,10 +27,6 @@ public interface ISessionManager {
 
     Map<Long, Session> getClientSessionMap();
 
-
-
     int getClientSessionChangeId();
-
-    void shutdown();
 }
 

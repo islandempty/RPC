@@ -1,7 +1,7 @@
 package com.zfoo.net.handler.idle;
 
 import com.zfoo.net.packet.common.Heartbeat;
-import com.zfoo.net.packet.model.EncodePacketInfo;
+import com.zfoo.net.packet.model.EncodedPacketInfo;
 import com.zfoo.net.util.SessionUtils;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandler;
@@ -21,18 +21,18 @@ public class ClientIdleHandler extends ChannelDuplexHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(ClientIdleHandler.class);
 
-    private static final EncodePacketInfo heartbeatPacket = EncodePacketInfo.valueOf(Heartbeat.getInstance(), null);
-
+    private static final EncodedPacketInfo heartbeatPacket = EncodedPacketInfo.valueOf(Heartbeat.getInstance(), null);
 
     @Override
-    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-        if (evt instanceof IdleStateEvent){
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
+        if (evt instanceof IdleStateEvent) {
             IdleStateEvent event = (IdleStateEvent) evt;
-            if (event.state() == IdleState.ALL_IDLE){
+            if (event.state() == IdleState.ALL_IDLE) {
                 logger.warn("client sends heartbeat packet to {}", SessionUtils.sessionInfo(ctx));
                 ctx.channel().writeAndFlush(heartbeatPacket);
             }
         }
+
     }
 }
 

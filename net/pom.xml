@@ -13,8 +13,9 @@
 
     <properties>
         <!-- 本项目的其它module版本号 -->
+        <zfoo.boot.version>3.0</zfoo.boot.version>
         <zfoo.event.version>3.0</zfoo.event.version>
-        <zfoo.hotswap.version>3.0</zfoo.hotswap.version>
+
         <zfoo.monitor.version>3.0</zfoo.monitor.version>
         <zfoo.net.version>3.0</zfoo.net.version>
         <zfoo.scheduler.version>3.0</zfoo.scheduler.version>
@@ -82,7 +83,7 @@
         <slf4j.version>1.7.30</slf4j.version>
         <logback.version>1.2.3</logback.version>
 
-        <junit.version>4.13.1</junit.version>
+        <junit.version>4.12</junit.version>
 
         <!-- java版本和文件编码 -->
         <java.version>11</java.version>
@@ -105,16 +106,26 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.ie</groupId>
+            <groupId>com.zfoo</groupId>
             <artifactId>util</artifactId>
-            <version>1.0</version>
+            <version>${zfoo.util.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.zfoo</groupId>
+            <artifactId>event</artifactId>
+            <version>${zfoo.event.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.zfoo</groupId>
             <artifactId>scheduler</artifactId>
-            <version>3.0</version>
+            <version>${zfoo.util.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.zfoo</groupId>
+            <artifactId>protocol</artifactId>
+            <version>${zfoo.protocol.version}</version>
+        </dependency>
+
         <!-- 依赖的通信类库 -->
         <dependency>
             <groupId>io.netty</groupId>
@@ -242,19 +253,6 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.example</groupId>
-            <artifactId>event</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.ie</groupId>
-            <artifactId>protocol</artifactId>
-            <version>1.0</version>
-            <scope>compile</scope>
-        </dependency>
-
     </dependencies>
 
     <build>

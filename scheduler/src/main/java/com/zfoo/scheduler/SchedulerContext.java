@@ -1,6 +1,6 @@
 package com.zfoo.scheduler;
 
-import com.ie.util.ThreadUtils;
+import com.zfoo.util.ThreadUtils;
 import com.zfoo.protocol.util.ReflectionUtils;
 import com.zfoo.scheduler.manager.SchedulerBus;
 import com.zfoo.scheduler.schema.SchedulerRegisterProcessor;

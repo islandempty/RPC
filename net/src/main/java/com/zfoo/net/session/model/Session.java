@@ -5,6 +5,7 @@ import com.zfoo.net.packet.model.SignalPacketAttachment;
 import com.zfoo.protocol.util.StringUtils;
 import io.netty.channel.Channel;
 
+import java.io.Closeable;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
@@ -16,7 +17,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author islandempty
  * @since 2021/7/14
  **/
-public class Session {
+public class Session implements Closeable {
 
     private static final AtomicLong ATOMIC_LONG = new AtomicLong(0);
 
@@ -28,33 +29,22 @@ public class Session {
     private Channel channel;
 
     /**
-     * Session附带的参数属性
+     * Session附带的属性参数
      */
-    private Map<AttributeType, Object> attributes =new EnumMap<>(AttributeType.class);
+    private Map<AttributeType, Object> attributes = new EnumMap<>(AttributeType.class);
 
-    /**
-     * 客户端session控制同步或异步的附加包, Key packetId
-     */
-    private Map<Integer, SignalPacketAttachment> clientSignalPacketAttachmentMap = new ConcurrentHashMap<>();
 
-    public Session(Channel channel){
-        if (channel == null){
+    public Session(Channel channel) {
+        if (channel == null) {
             throw new IllegalArgumentException("channel不能为空");
         }
         this.sid = ATOMIC_LONG.getAndIncrement();
-        this.channel =channel;
+        this.channel = channel;
     }
 
-    public void addClientSignalAttachment(SignalPacketAttachment signalPacketAttachment){
-        clientSignalPacketAttachmentMap.put(signalPacketAttachment.getPacketId(),signalPacketAttachment);
-    }
-
-    public IPacketAttachment removeClientSignalAttachment(SignalPacketAttachment signalPacketAttachment){
-        return clientSignalPacketAttachmentMap.remove(signalPacketAttachment.getPacketId());
-    }
 
     @Override
-    public String toString(){
+    public String toString() {
         return StringUtils.format("[sid:{}] [channel:{}] [attributes:{}]", sid, channel, attributes);
     }
 
@@ -73,6 +63,11 @@ public class Session {
     @Override
     public int hashCode() {
         return Objects.hash(sid);
+    }
+
+    @Override
+    public void close() {
+        channel.close();
     }
 
     public long getSid() {
@@ -96,18 +91,8 @@ public class Session {
         return attributes.get(key);
     }
 
-    public Map<Integer, IPacketAttachment> getClientSignalPacketAttachmentMap() {
-        //产生一个只能读的map
-        return Collections.unmodifiableMap(clientSignalPacketAttachmentMap);
-    }
-
     public Channel getChannel() {
         return channel;
-    }
-
-    public void close() {
-        channel.close();
-        clientSignalPacketAttachmentMap.clear();
     }
 }
 

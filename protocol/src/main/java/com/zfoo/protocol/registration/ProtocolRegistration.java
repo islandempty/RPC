@@ -22,7 +22,10 @@ public class ProtocolRegistration implements IProtocolRegistration{
     private byte module;
     private Constructor<?> constructor;
 
+    private Object receiver;
+
     private Field[] fields;
+
 
     /**
      * 所有的协议里的发送顺序都是按字段名称排序
@@ -49,38 +52,46 @@ public class ProtocolRegistration implements IProtocolRegistration{
     }
 
     @Override
-    public Object read(ByteBuf buffer) {
-        if (!ByteBufUtils.readBoolean(buffer)){
-            return null;
-        }
-        Object object = ReflectionUtils.newInstance(constructor);
-        for (int i = 0; i < fields.length; i++) {
-            Field field = fields[i];
-            IFieldRegistration packetFieldRegistration = fieldRegistrations[i];
-            ISerializer serializer = packetFieldRegistration.serializer();
-            Object fieldValue = serializer.readObject(buffer, packetFieldRegistration);
-            ReflectionUtils.setField(field , object ,fieldValue);
-        }
-
-        return object;
+    public Object receiver() {
+        return receiver;
     }
+
 
     @Override
     public void write(ByteBuf buffer, IPacket packet) {
-        if (packet == null){
-            ByteBufUtils.writeBoolean(buffer , false);
+        if (packet == null) {
+            ByteBufUtils.writeBoolean(buffer, false);
             return;
         }
-        ByteBufUtils.writeBoolean(buffer , true);
 
-        for (int i = 0; i < fields.length; i++) {
+        ByteBufUtils.writeBoolean(buffer, true);
+
+        for (int i = 0, length = fields.length; i < length; i++) {
             Field field = fields[i];
             IFieldRegistration packetFieldRegistration = fieldRegistrations[i];
             ISerializer serializer = packetFieldRegistration.serializer();
             Object fieldValue = ReflectionUtils.getField(field, packet);
-            serializer.writeObject(buffer , fieldValue ,packetFieldRegistration);
+            serializer.writeObject(buffer, fieldValue, packetFieldRegistration);
         }
     }
+
+    @Override
+    public Object read(ByteBuf buffer) {
+        if (!ByteBufUtils.readBoolean(buffer)) {
+            return null;
+        }
+        Object object = ReflectionUtils.newInstance(constructor);
+
+        for (int i = 0, length = fields.length; i < length; i++) {
+            Field field = fields[i];
+            IFieldRegistration packetFieldRegistration = fieldRegistrations[i];
+            ISerializer serializer = packetFieldRegistration.serializer();
+            Object fieldValue = serializer.readObject(buffer, packetFieldRegistration);
+            ReflectionUtils.setField(field, object, fieldValue);
+        }
+        return object;
+    }
+
 
     public short getId() {
         return id;

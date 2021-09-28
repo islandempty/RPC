@@ -1,7 +1,8 @@
 package com.zfoo.net.consumer.registry;
 
-import com.ie.util.ThreadUtils;
-import com.ie.util.net.HostAndPort;
+import com.zfoo.protocol.collection.ArrayUtils;
+import com.zfoo.util.ThreadUtils;
+import com.zfoo.util.net.HostAndPort;
 import com.zfoo.event.manager.EventBus;
 import com.zfoo.net.NetContext;
 import com.zfoo.net.consumer.event.ConsumerStartEvent;
@@ -53,19 +54,19 @@ import java.util.stream.Collectors;
  * @author islandempty
  * @since 2021/7/22
  **/
-public class ZookeeperRegistry  implements IRegistry{
+public class ZookeeperRegistry implements IRegistry {
 
     private static final Logger logger = LoggerFactory.getLogger(ZookeeperRegistry.class);
 
-    private static final String ROOT_PATH ="/zfoo";
-    private static final String PROVIDER_ROOT_PATH = ROOT_PATH +"/provider";
+    private static final String ROOT_PATH = "/zfoo";
+    private static final String PROVIDER_ROOT_PATH = ROOT_PATH + "/provider";
     private static final String CONSUMER_ROOT_PATH = ROOT_PATH + "/consumer";
 
     private static final long RETRY_SECONDS = 5;
 
     private static final ExecutorService executor = Executors.newSingleThreadExecutor(new ConfigThreadFactory());
 
-    private static class ConfigThreadFactory implements ThreadFactory{
+    private static class ConfigThreadFactory implements ThreadFactory {
         private static final AtomicInteger poolNumber = new AtomicInteger(1);
         private final ThreadGroup group;
         private final AtomicInteger threadNumber = new AtomicInteger(1);
@@ -80,13 +81,14 @@ public class ZookeeperRegistry  implements IRegistry{
 
         @Override
         public Thread newThread(Runnable runnable) {
-            var thread = new FastThreadLocalThread(group, runnable, namePrefix + threadNumber.getAndIncrement(), 0);
-            thread.setDaemon(false);
-            thread.setPriority(Thread.NORM_PRIORITY);
-            thread.setUncaughtExceptionHandler((t, e) -> logger.error(t.toString(), e));
-            return thread;
+            Thread t = new FastThreadLocalThread(group, runnable, namePrefix + threadNumber.getAndIncrement(), 0);
+            t.setDaemon(false);
+            t.setPriority(Thread.NORM_PRIORITY);
+            t.setUncaughtExceptionHandler((thread, e) -> logger.error(thread.toString(), e));
+            return t;
         }
     }
+
 
     private CuratorFramework curator;
     /**
@@ -101,6 +103,8 @@ public class ZookeeperRegistry  implements IRegistry{
      * 本地注册信息
      */
     private RegisterVO localRegisterVO = NetContext.getConfigManager().getLocalConfig().toLocalRegisterVO();
+
+
     /**
      * addListener中的cache全部会被添加到这个集合中，这个集合不包括providerCuratorCache
      */
@@ -108,9 +112,9 @@ public class ZookeeperRegistry  implements IRegistry{
 
     @Override
     public void start() {
-        var registryConfig = NetContext.getConfigManager().getLocalConfig().getRegistryConfig();
+        var registryConfig = NetContext.getConfigManager().getLocalConfig().getRegistry();
         if (Objects.isNull(registryConfig)) {
-            logger.warn("没有配置注册中心registry，将不能启用服务注册和发现");
+            logger.info("服务提供者没有配置，不会在zk种注册服务，如果是单机启动请忽略这条日志");
             return;
         }
 
@@ -123,10 +127,10 @@ public class ZookeeperRegistry  implements IRegistry{
     }
 
     private void startProvider() {
-        var providerConfig = NetContext.getConfigManager().getLocalConfig().getProviderConfig();
+        var providerConfig = NetContext.getConfigManager().getLocalConfig().getProvider();
 
         if (Objects.isNull(providerConfig)) {
-            logger.warn("没有发现服务提供者，不对外提供服务");
+            logger.info("服务提供者没有配置，不会在zk种注册服务，如果是单机启动请忽略这条日志");
             return;
         }
 
@@ -135,14 +139,14 @@ public class ZookeeperRegistry  implements IRegistry{
     }
 
     private void startCurator() {
-        var registryConfig = NetContext.getConfigManager().getLocalConfig().getRegistryConfig();
+        var registryConfig = NetContext.getConfigManager().getLocalConfig().getRegistry();
 
         if (!registryConfig.getCenter().toLowerCase().matches("zookeeper")) {
             throw new IllegalArgumentException(StringUtils
                     .format("[center:{}]注册中心只能是zookeeper", JsonUtils.object2String(registryConfig)));
         }
 
-        var zookeeperConnectStr = HostAndPort.toHostAndPortListStr(HostAndPort.toHostAndPortList(registryConfig.getAddressMap().values()));
+        var zookeeperConnectStr = HostAndPort.toHostAndPortListStr(HostAndPort.toHostAndPortList(registryConfig.getAddress().values()));
         var builder = CuratorFrameworkFactory.builder();
         builder.connectString(zookeeperConnectStr);
         if (registryConfig.hasZookeeperAuthor()) {
@@ -189,7 +193,7 @@ public class ZookeeperRegistry  implements IRegistry{
             // 创建zookeeper的根路径
             var rootStat = curator.checkExists().forPath(ROOT_PATH);
             if (Objects.isNull(rootStat)) {
-                var registryConfig = NetContext.getConfigManager().getLocalConfig().getRegistryConfig();
+                var registryConfig = NetContext.getConfigManager().getLocalConfig().getRegistry();
                 var builder = curator.create();
                 builder.creatingParentsIfNeeded();
                 if (registryConfig.hasZookeeperAuthor()) {
@@ -200,7 +204,7 @@ public class ZookeeperRegistry  implements IRegistry{
                 builder.withMode(CreateMode.PERSISTENT);
                 builder.forPath(ROOT_PATH, StringUtils.bytes(registryConfig.getCenter()));
             } else {
-                var registryConfig = NetContext.getConfigManager().getLocalConfig().getRegistryConfig();
+                var registryConfig = NetContext.getConfigManager().getLocalConfig().getRegistry();
                 var bytes = curator.getData().storingStatIn(new Stat()).forPath(ROOT_PATH);
                 var rootPathData = StringUtils.bytesToString(bytes);
 
@@ -230,14 +234,14 @@ public class ZookeeperRegistry  implements IRegistry{
             if (Objects.isNull(providerStat)) {
                 curator.create()
                         .withMode(CreateMode.PERSISTENT)
-                        .forPath(PROVIDER_ROOT_PATH, StringUtils.EMPTY_BYTES);
+                        .forPath(PROVIDER_ROOT_PATH, ArrayUtils.EMPTY_BYTE_ARRAY);
             }
 
             var consumerStat = curator.checkExists().forPath(CONSUMER_ROOT_PATH);
             if (Objects.isNull(consumerStat)) {
                 curator.create()
                         .withMode(CreateMode.PERSISTENT)
-                        .forPath(CONSUMER_ROOT_PATH, StringUtils.EMPTY_BYTES);
+                        .forPath(CONSUMER_ROOT_PATH, ArrayUtils.EMPTY_BYTE_ARRAY);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -291,6 +295,7 @@ public class ZookeeperRegistry  implements IRegistry{
 
         providerCuratorCache.start();
     }
+
     private void initZookeeper() {
         executor.execute(() -> {
             try {
@@ -299,7 +304,7 @@ public class ZookeeperRegistry  implements IRegistry{
                 initConsumerCache();
             } catch (Exception e) {
                 logger.error("zookeeper初始化失败，等待[{}]秒，重新初始化", RETRY_SECONDS, e);
-                SchedulerBus.scheduler(new Runnable() {
+                SchedulerBus.schedule(new Runnable() {
                     @Override
                     public void run() {
                         initZookeeper();
@@ -309,7 +314,7 @@ public class ZookeeperRegistry  implements IRegistry{
         });
     }
 
-    private void initLocalProvider()throws Exception{
+    private void initLocalProvider() throws Exception {
         if (Objects.nonNull(localRegisterVO.getProviderConfig())) {
             var localProviderVoStr = localRegisterVO.toProviderString();
             var localProviderPath = PROVIDER_ROOT_PATH + StringUtils.SLASH + localProviderVoStr;
@@ -337,7 +342,7 @@ public class ZookeeperRegistry  implements IRegistry{
         }
     }
 
-    private void initConsumerCache() throws Exception{
+    private void initConsumerCache() throws Exception {
         // 初始化providerCacheSet
         var remoteProviderSet = curator.getChildren().forPath(PROVIDER_ROOT_PATH).stream()
                 .filter(it -> !StringUtils.isBlank(it) && !"null".equals(it))
@@ -352,15 +357,21 @@ public class ZookeeperRegistry  implements IRegistry{
         // 初始化consumer，providerCacheSet改变会导致消费者改变
         checkConsumer();
     }
+
     @Override
     public void checkConsumer() {
-        if (curator.getState() == CuratorFrameworkState.STOPPED){
+        if (curator == null) {
             return;
         }
 
-        executor.execute(()->doCheckConsumer());
+        if (curator.getState() == CuratorFrameworkState.STOPPED) {
+            return;
+        }
+
+        executor.execute(() -> doCheckConsumer());
     }
-    private void doCheckConsumer(){
+
+    private void doCheckConsumer() {
         if (curator.getState() != CuratorFrameworkState.STARTED) {
             logger.error("curator还没有启动，忽略本次consumer的检查");
             return;
@@ -369,6 +380,7 @@ public class ZookeeperRegistry  implements IRegistry{
         logger.info("开始通过[providerCacheSet:{}]检查[consumer:{}]", providerCacheSet, NetContext.getSessionManager().getClientSessionMap().size());
 
         var recheckFlag = false;
+
         for (var providerCache : providerCacheSet) {
             var consumerClientList = NetContext.getSessionManager().getClientSessionMap().values().stream()
                     .filter(it -> {
@@ -420,7 +432,7 @@ public class ZookeeperRegistry  implements IRegistry{
         }
 
         if (recheckFlag) {
-            SchedulerBus.scheduler(new Runnable() {
+            SchedulerBus.schedule(new Runnable() {
                 @Override
                 public void run() {
                     checkConsumer();
@@ -432,14 +444,17 @@ public class ZookeeperRegistry  implements IRegistry{
     @Override
     public void addData(String path, byte[] bytes, CreateMode mode) {
         try {
-            Stat stat = curator.checkExists().forPath(path);
+            var providerStat = curator.checkExists().forPath(path);
 
-            if (Objects.isNull(stat)){
+            if (Objects.isNull(providerStat)) {
                 curator.create()
                         .creatingParentsIfNeeded()
                         .withMode(mode)
-                        .forPath(path,bytes);
+                        .forPath(path, bytes);
+            } else {
+                curator.setData().forPath(path, bytes);
             }
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -447,8 +462,6 @@ public class ZookeeperRegistry  implements IRegistry{
 
     @Override
     public void removeData(String path) {
-        //删除节点并递归删除其子节点
-        //guaranteed() 强制保证删除一个节点
         try {
             curator.delete().guaranteed().deletingChildrenIfNeeded().forPath(path);
         } catch (Exception e) {
@@ -459,7 +472,6 @@ public class ZookeeperRegistry  implements IRegistry{
     @Override
     public byte[] queryData(String path) {
         try {
-            //读取一个节点的数据内容，同时获取到该节点的stat
             return curator.getData().storingStatIn(new Stat()).forPath(path);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -493,13 +505,13 @@ public class ZookeeperRegistry  implements IRegistry{
     @Override
     public Set<RegisterVO> remoteProviderRegisterSet() {
         try {
-            var remoteProviderSet =curator.getChildren().forPath(PROVIDER_ROOT_PATH).stream()
-                    .filter(it -> !StringUtils.isBlank(it)&&!"null".equals(it))
+            var remoteProviderSet = curator.getChildren().forPath(PROVIDER_ROOT_PATH).stream()
+                    .filter(it -> !StringUtils.isBlank(it) && !"null".equals(it))
                     .map(it -> RegisterVO.parseString(it))
                     .filter(it -> Objects.nonNull(it))
                     .collect(Collectors.toSet());
             return remoteProviderSet;
-        }catch (Exception e) {
+        } catch (Exception e) {
             logger.error("未知异常", e);
         } catch (Throwable t) {
             logger.error("未知错误", t);
@@ -507,24 +519,17 @@ public class ZookeeperRegistry  implements IRegistry{
         return Collections.emptySet();
     }
 
-    /**
-     * 监听path路径下的更新
-     *
-     * @param listenerPath   需要监听的路径
-     * @param updateCallback 回调方法，第一个参数是路径，第二个是变化的内容
-     * @param removeCallback 回调方法，第一个参数是路径，第二个是变化的内容
-     */
     @Override
     public void addListener(String listenerPath, BiConsumer<String, byte[]> updateCallback, Consumer<String> removeCallback) {
         try {
             var providerStat = curator.checkExists().forPath(listenerPath);
-            if (Objects.nonNull(providerStat)){
+            if (Objects.isNull(providerStat)) {
                 curator.create()
                         .creatingParentsIfNeeded()
                         .withMode(CreateMode.PERSISTENT)
-                        .forPath(listenerPath, StringUtils.EMPTY_BYTES);
+                        .forPath(listenerPath, ArrayUtils.EMPTY_BYTE_ARRAY);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
@@ -532,38 +537,41 @@ public class ZookeeperRegistry  implements IRegistry{
         listener.listenable().addListener(new CuratorCacheListener() {
             @Override
             public void event(Type type, ChildData oldData, ChildData newData) {
-                switch (type){
+                switch (type) {
                     case NODE_CHANGED:
                     case NODE_CREATED:
                         logger.info("listener child updated [oldData:{}] [newData:{}]", childDataToString(oldData), childDataToString(newData));
-                        if (updateCallback != null){
+                        if (updateCallback != null) {
                             try {
-                                updateCallback.accept(newData.getPath(),newData.getData());
-                            }catch (Exception e){
+                                updateCallback.accept(newData.getPath(), newData.getData());
+                            } catch (Exception e) {
                                 logger.error("listener child updated error", e);
                             }
                         }
                         break;
                     case NODE_DELETED:
-                        if (removeCallback !=null){
+                        if (removeCallback != null) {
                             removeCallback.accept(oldData.getPath());
                         }
-                    break;
+                        break;
                     default:
                 }
             }
-        },executor);
+        }, executor);
         listener.start();
         listenerList.add(listener);
     }
 
     @Override
     public void shutdown() {
+        if (curator == null) {
+            return;
+        }
         try {
-            if (curator.getState() == CuratorFrameworkState.STOPPED){
-                //删除服务提供者的临时节点
-                if (Objects.nonNull(localRegisterVO.getProviderConfig())){
-                    var localProviderPath = PROVIDER_ROOT_PATH +StringUtils.SLASH +localRegisterVO.toProviderString();
+            if (curator.getState() == CuratorFrameworkState.STARTED) {
+                // 删除服务提供者的临时节点
+                if (Objects.nonNull(localRegisterVO.getProviderConfig())) {
+                    var localProviderPath = PROVIDER_ROOT_PATH + StringUtils.SLASH + localRegisterVO.toProviderString();
                     var localProviderStat = curator.checkExists().forPath(localProviderPath);
                     if (Objects.nonNull(localProviderStat)) {
                         curator.delete().guaranteed().deletingChildrenIfNeeded().forPath(localProviderPath);
@@ -579,8 +587,8 @@ public class ZookeeperRegistry  implements IRegistry{
                     }
                 }
             }
-        }catch (Throwable t){
-            logger.error(ExceptionUtils.getMessage(t));
+        } catch (Throwable e) {
+            logger.error(ExceptionUtils.getMessage(e));
         }
 
         try {
@@ -592,17 +600,18 @@ public class ZookeeperRegistry  implements IRegistry{
         }
     }
 
-    private String childDataToString(ChildData childData){
-        if (childData == null){
+    private String childDataToString(ChildData childData) {
+        if (childData == null) {
             return StringUtils.EMPTY;
         }
 
-        //只打印data数据比较小的内容
-        if (childData.getData() == null || childData.getData().length <= 0){
+        // 只打印data数据比较小的内容
+        if (childData.getData() == null || childData.getData().length <= 8) {
             return childData.toString();
         }
 
         return StringUtils.format("[path:{}] [stat:{}] [dataSize:{}]", childData.getPath(), childData.getStat(), childData.getData().length);
     }
+
 }
 

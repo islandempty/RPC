@@ -1,6 +1,7 @@
 package com.zfoo.net.core;
 
-import com.ie.util.net.HostAndPort;
+import com.zfoo.protocol.util.IOUtils;
+import com.zfoo.util.net.HostAndPort;
 import com.zfoo.net.NetContext;
 import com.zfoo.net.handler.BaseDispatcherHandler;
 import com.zfoo.net.session.model.Session;
@@ -25,7 +26,7 @@ public abstract class AbstractClient implements IClient{
     protected static final Logger logger = LoggerFactory.getLogger(AbstractClient.class);
 
     protected static final EventLoopGroup nioEventLoopGroup = Epoll.isAvailable()
-            ? new EpollEventLoopGroup(Runtime.getRuntime().availableProcessors()+1,new DefaultThreadFactory("netty-client",true))
+            ? new EpollEventLoopGroup(Runtime.getRuntime().availableProcessors() + 1, new DefaultThreadFactory("netty-client", true))
             : new NioEventLoopGroup(Runtime.getRuntime().availableProcessors() + 1, new DefaultThreadFactory("netty-client", true));
 
     protected String hostAddress;
@@ -45,23 +46,25 @@ public abstract class AbstractClient implements IClient{
         return doStart(channelChannelInitializer());
     }
 
-    private synchronized Session doStart(ChannelInitializer<? extends  Channel> channelInitializer){
-       this.bootstrap = new Bootstrap();
-       this.bootstrap.group(nioEventLoopGroup)
-               .channel(Epoll.isAvailable() ? EpollSocketChannel.class : NioSocketChannel.class)
-               .option(ChannelOption.TCP_NODELAY,true)
-               .handler(channelChannelInitializer());
-
+    private synchronized Session doStart(ChannelInitializer<? extends Channel> channelChannelInitializer) {
+        this.bootstrap = new Bootstrap();
+        this.bootstrap.group(nioEventLoopGroup)
+                .channel(Epoll.isAvailable() ? EpollSocketChannel.class : NioSocketChannel.class)
+                .option(ChannelOption.TCP_NODELAY, true)
+                .option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(16 * IOUtils.BYTES_PER_KB, 16 * IOUtils.BYTES_PER_MB))
+                .handler(channelChannelInitializer());
         var channelFuture = bootstrap.connect(hostAddress, port);
         channelFuture.syncUninterruptibly();
 
-        if (channelFuture.isSuccess()){
-            var channel = channelFuture.channel();
-            var session = BaseDispatcherHandler.initChannel(channel);
-            NetContext.getSessionManager().addClientSession(session);
-            logger.info("TcpClient started at [{}]", channel.localAddress());
-            return session;
-        }else if (channelFuture.cause() != null) {
+        if (channelFuture.isSuccess()) {
+            if (channelFuture.channel().isActive()) {
+                var channel = channelFuture.channel();
+                var session = BaseDispatcherHandler.initChannel(channel);
+                NetContext.getSessionManager().addClientSession(session);
+                logger.info("TcpClient started at [{}]", channel.localAddress());
+                return session;
+            }
+        } else if (channelFuture.cause() != null) {
             logger.error(ExceptionUtils.getMessage(channelFuture.cause()));
         } else {
             logger.error("启动客户端[client:{}]未知错误", this);
@@ -69,7 +72,8 @@ public abstract class AbstractClient implements IClient{
         return null;
     }
 
-    public synchronized static void shutdown(){
+
+    public synchronized static void shutdown() {
         AbstractServer.shutdownEventLoopGracefully(nioEventLoopGroup);
     }
 

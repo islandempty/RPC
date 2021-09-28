@@ -1,6 +1,7 @@
 package com.zfoo.net.core.gateway;
 
-import com.ie.util.net.HostAndPort;
+import com.zfoo.protocol.util.IOUtils;
+import com.zfoo.util.net.HostAndPort;
 import com.zfoo.net.core.AbstractServer;
 import com.zfoo.net.handler.GatewayDispatcherHandler;
 import com.zfoo.net.handler.codec.websocket.WebSocketCodecHandler;
@@ -35,6 +36,8 @@ public class WebsocketGatewayServer extends AbstractServer {
     public ChannelInitializer<SocketChannel> channelChannelInitializer() {
         return new ChannelHandlerInitializer(packetFilter);
     }
+
+
     private static class ChannelHandlerInitializer extends ChannelInitializer<SocketChannel> {
 
         private BiFunction<Session, IPacket, Boolean> packetFilter;
@@ -48,10 +51,10 @@ public class WebsocketGatewayServer extends AbstractServer {
             channel.pipeline().addLast(new IdleStateHandler(0, 0, 180));
             channel.pipeline().addLast(new ServerIdleHandler());
 
-            channel.pipeline().addLast(new HttpServerCodec());
-            channel.pipeline().addLast(new ChunkedWriteHandler());
-            channel.pipeline().addLast(new HttpObjectAggregator(64 * 1024));
+            channel.pipeline().addLast(new HttpServerCodec(8 * IOUtils.BYTES_PER_KB, 16 * IOUtils.BYTES_PER_KB, 16 * IOUtils.BYTES_PER_KB));
+            channel.pipeline().addLast(new HttpObjectAggregator(16 * IOUtils.BYTES_PER_MB));
             channel.pipeline().addLast(new WebSocketServerProtocolHandler("/websocket"));
+            channel.pipeline().addLast(new ChunkedWriteHandler());
             channel.pipeline().addLast(new WebSocketCodecHandler());
             channel.pipeline().addLast(new GatewayDispatcherHandler(packetFilter));
         }

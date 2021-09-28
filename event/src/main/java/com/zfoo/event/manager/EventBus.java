@@ -1,6 +1,6 @@
 package com.zfoo.event.manager;
 
-import com.ie.util.math.RandomUtils;
+import com.zfoo.util.math.RandomUtils;
 import com.zfoo.event.model.event.IEvent;
 import com.zfoo.event.model.vo.IEventReceiver;
 import org.slf4j.Logger;
@@ -24,7 +24,7 @@ public class EventBus {
     private static final Logger logger = LoggerFactory.getLogger(EventBus.class);
 
     //线程池大小,cpu核心线程数 * 2;
-    private static final int EXECUTORS_SIZE = Runtime.getRuntime().availableProcessors() * 2;
+    public static final int EXECUTORS_SIZE = Runtime.getRuntime().availableProcessors() * 2;
 
     private static final ExecutorService[] executors = new ExecutorService[EXECUTORS_SIZE];
 
@@ -42,12 +42,12 @@ public class EventBus {
      *
      * @param event 需要抛出的事件
      */
-    public static void syncSubmit(IEvent event){
+    public static void syncSubmit(IEvent event) {
         var list = receiverMap.get(event.getClass());
-        if (CollectionUtils.isEmpty(list)){
+        if (CollectionUtils.isEmpty(list)) {
             return;
         }
-        doSubmit(event,list);
+        doSubmit(event, list);
     }
 
     /**
@@ -55,16 +55,16 @@ public class EventBus {
      *
      * @param event 需要抛出的事件
      */
-    public static void asyncSubmit(IEvent event){
+    public static void asyncSubmit(IEvent event) {
         var list = receiverMap.get(event.getClass());
-        if (CollectionUtils.isEmpty(list)){
+        if (CollectionUtils.isEmpty(list)) {
             return;
         }
 
         executors[Math.abs(event.threadId() % EXECUTORS_SIZE)].execute(new Runnable() {
             @Override
             public void run() {
-                doSubmit(event,list);
+                doSubmit(event, list);
             }
         });
     }
@@ -72,12 +72,16 @@ public class EventBus {
     /**
      * 随机获取一个线程池
      */
-    public static Executor asyncExecute(){
+    public static Executor asyncExecute() {
         return executors[RandomUtils.randomInt(EXECUTORS_SIZE)];
     }
 
-    private static void doSubmit(IEvent event,List<IEventReceiver> receiverList){
-        for (var receiver:receiverList) {
+    public static Executor asyncExecute(int hashcode) {
+        return executors[Math.abs(hashcode % EXECUTORS_SIZE)];
+    }
+
+    private static void doSubmit(IEvent event, List<IEventReceiver> receiverList) {
+        for (var receiver : receiverList) {
             try {
                 receiver.invoke(event);
             } catch (Exception e) {
@@ -87,8 +91,11 @@ public class EventBus {
             }
         }
     }
-    public static void registerEventReceiver(Class<? extends IEvent> eventType,IEventReceiver eventReceiver){
-        receiverMap.computeIfAbsent(eventType , it -> new LinkedList<>()).add(eventReceiver);
+
+    public static void registerEventReceiver(Class<? extends IEvent> eventType, IEventReceiver eventReceiver) {
+        receiverMap.computeIfAbsent(eventType, it -> new LinkedList<>()).add(eventReceiver);
     }
+
+
 }
 

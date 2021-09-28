@@ -15,10 +15,9 @@ import org.slf4j.LoggerFactory;
  * @since 2021/7/20
  **/
 @ChannelHandler.Sharable
-public class ServerDispatcherHandler extends BaseDispatcherHandler{
+public class ServerDispatcherHandler extends BaseDispatcherHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(ServerDispatcherHandler.class);
-
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
@@ -33,7 +32,7 @@ public class ServerDispatcherHandler extends BaseDispatcherHandler{
         super.channelInactive(ctx);
 
         var session = SessionUtils.getSession(ctx);
-        if (session == null){
+        if (session == null) {
             return;
         }
         NetContext.getSessionManager().removeServerSession(session);

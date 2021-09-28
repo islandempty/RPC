@@ -1,6 +1,6 @@
 package com.zfoo.event.model.vo;
 
-import com.ie.util.security.IdUtils;
+import com.zfoo.util.security.IdUtils;
 import com.zfoo.event.model.event.IEvent;
 import com.zfoo.event.schema.NamespaceHandler;
 import com.zfoo.protocol.util.StringUtils;

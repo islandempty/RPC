@@ -1,6 +1,6 @@
 package com.zfoo.net.packet.model;
 
-import com.ie.util.math.HashUtils;
+import com.zfoo.util.math.HashUtils;
 import com.zfoo.net.session.model.AttributeType;
 import com.zfoo.net.session.model.Session;
 import org.springframework.lang.Nullable;

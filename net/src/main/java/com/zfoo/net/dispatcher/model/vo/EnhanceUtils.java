@@ -1,6 +1,6 @@
 package com.zfoo.net.dispatcher.model.vo;
 
-import com.ie.util.security.IdUtils;
+import com.zfoo.util.security.IdUtils;
 import com.zfoo.net.packet.model.IPacketAttachment;
 import com.zfoo.net.session.model.Session;
 import com.zfoo.protocol.IPacket;
@@ -76,8 +76,8 @@ public abstract class EnhanceUtils {
 
         Class<?> resultClazz = enhanceClazz.toClass(IPacketReceiver.class);
         Constructor<?> resultConstructor = resultClazz.getConstructor(bean.getClass());
-        IPacketReceiver o = (IPacketReceiver)resultConstructor.newInstance(bean);
-        return o;
+        IPacketReceiver receiver = (IPacketReceiver)resultConstructor.newInstance(bean);
+        return receiver;
     }
 
 

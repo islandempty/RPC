@@ -1,7 +1,7 @@
 package com.zfoo.net.config.model;
 
-import com.ie.util.net.HostAndPort;
-import com.ie.util.net.NetUtils;
+import com.zfoo.util.net.HostAndPort;
+import com.zfoo.util.net.NetUtils;
 import com.zfoo.protocol.registration.ProtocolModule;
 import com.zfoo.protocol.util.StringUtils;
 

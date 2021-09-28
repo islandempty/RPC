@@ -1,6 +1,6 @@
 package com.zfoo.net.core.gateway;
 
-import com.ie.util.net.HostAndPort;
+import com.zfoo.util.net.HostAndPort;
 import com.zfoo.net.core.AbstractServer;
 import com.zfoo.net.handler.GatewayDispatcherHandler;
 import com.zfoo.net.handler.codec.tcp.TcpCodeHandler;
@@ -29,11 +29,12 @@ public class GatewayServer extends AbstractServer {
     }
 
     @Override
-    public ChannelInitializer<? extends Channel> channelChannelInitializer() {
+    public ChannelInitializer<SocketChannel> channelChannelInitializer() {
         return new ChannelHandlerInitializer(packetFilter);
     }
 
-    private static class ChannelHandlerInitializer extends ChannelInitializer<SocketChannel>{
+
+    private static class ChannelHandlerInitializer extends ChannelInitializer<SocketChannel> {
 
         private BiFunction<Session, IPacket, Boolean> packetFilter;
 
@@ -42,11 +43,11 @@ public class GatewayServer extends AbstractServer {
         }
 
         @Override
-        protected void initChannel(SocketChannel socketChannel) throws Exception {
-            socketChannel.pipeline().addLast(new IdleStateHandler(0,0,180));
-            socketChannel.pipeline().addLast(new ServerIdleHandler());
-            socketChannel.pipeline().addLast(new TcpCodeHandler());
-            socketChannel.pipeline().addLast(new GatewayDispatcherHandler(packetFilter));
+        protected void initChannel(SocketChannel channel) {
+            channel.pipeline().addLast(new IdleStateHandler(0, 0, 180));
+            channel.pipeline().addLast(new ServerIdleHandler());
+            channel.pipeline().addLast(new TcpCodeHandler());
+            channel.pipeline().addLast(new GatewayDispatcherHandler(packetFilter));
         }
     }
 }

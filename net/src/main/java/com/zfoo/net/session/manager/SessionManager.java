@@ -1,6 +1,6 @@
 package com.zfoo.net.session.manager;
 
-import com.ie.util.security.IdUtils;
+import com.zfoo.util.security.IdUtils;
 import com.zfoo.net.session.model.Session;
 import com.zfoo.net.util.SessionUtils;
 import org.slf4j.Logger;
@@ -23,25 +23,27 @@ public class SessionManager implements ISessionManager{
      */
     private final Map<Long, Session> serverSessionMap = new ConcurrentHashMap<>();
 
-    private volatile int clientSessionChangeId = IdUtils.getLocalIntId();
 
     /**
      * 作为客户端，连接别的服务器的Session
      */
     private final Map<Long, Session> clientSessionMap = new ConcurrentHashMap<>();
 
+    private volatile int clientSessionChangeId = IdUtils.getLocalIntId();
+
+
     @Override
     public void addServerSession(Session session) {
-        if (serverSessionMap.containsKey(session.getSid())){
+        if (serverSessionMap.containsKey(session.getSid())) {
             logger.error("server收到重复的[session:{}]", SessionUtils.sessionInfo(session));
             return;
         }
-        serverSessionMap.put(session.getSid(),session);
+        serverSessionMap.put(session.getSid(), session);
     }
 
     @Override
     public void removeServerSession(Session session) {
-        if (!serverSessionMap.containsKey(session.getSid())){
+        if (!serverSessionMap.containsKey(session.getSid())) {
             logger.error("SessionManager中的serverSession没有包含[session:{}]，所以无法移除", SessionUtils.sessionInfo(session));
             return;
         }
@@ -93,27 +95,6 @@ public class SessionManager implements ISessionManager{
     @Override
     public int getClientSessionChangeId() {
         return clientSessionChangeId;
-    }
-
-    @Override
-    public void shutdown() {
-        clientSessionMap.values().forEach(it ->{
-            try {
-                it.close();
-            } catch (Exception e) {
-                logger.error("关闭[session:{}]发生未知异常", SessionUtils.sessionInfo(it), e);
-            }
-        });
-
-        serverSessionMap.values().forEach(it -> {
-            try {
-                it.close();
-            } catch (Exception e) {
-                logger.error("关闭[session:{}]发生未知异常", SessionUtils.sessionInfo(it), e);
-            }
-        });
-
-        logger.info("已关闭客户端和服务器所有的session");
     }
 }
 

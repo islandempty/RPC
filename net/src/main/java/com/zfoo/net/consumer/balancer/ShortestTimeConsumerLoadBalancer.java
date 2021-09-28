@@ -14,38 +14,29 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- *
  * 最少时间调用负载均衡器，优先选择调用时间最短的session
  *
  * @author islandempty
  * @since 2021/7/21
  **/
-public class ShortestTimeConsumerLoadBalancer extends AbstractConsumerLoadBalancer{
+public class ShortestTimeConsumerLoadBalancer extends AbstractConsumerLoadBalancer {
 
     private static final ShortestTimeConsumerLoadBalancer INSTANCE = new ShortestTimeConsumerLoadBalancer();
 
-    private ShortestTimeConsumerLoadBalancer(){
-
+    private ShortestTimeConsumerLoadBalancer() {
     }
 
-    public static ShortestTimeConsumerLoadBalancer getInstance(){
+    public static ShortestTimeConsumerLoadBalancer getInstance() {
         return INSTANCE;
     }
 
-    /**
-     * 只有一致性hash会使用这个argument参数，如果在一致性hash没有传入argument默认使用随机负载均衡
-     *
-     * @param packet   请求包
-     * @param argument 计算参数
-     * @return 一个服务提供者的session
-     */
     @Override
     public Session loadBalancer(IPacket packet, Object argument) {
         var module = ProtocolManager.moduleByProtocolId(packet.protocolId());
-        var sessions = getSessionByModule(module);
+        var sessions = getSessionsByModule(module);
 
-        if (sessions.isEmpty()){
-            throw new RunException("没有服务提供者提供服务[{}]", module);
+        if (sessions.isEmpty()) {
+            throw new RunException("一致性hash负载均衡[protocolId:{}]参数[argument:{}],没有服务提供者提供服务[module:{}]", packet.protocolId(), argument, module);
         }
 
         var sortedSessions = sessions.stream()
@@ -86,5 +77,6 @@ public class ShortestTimeConsumerLoadBalancer extends AbstractConsumerLoadBalanc
         }
         map.put(packet.protocolId(), TimeUtils.currentTimeMillis() - attachment.getTimestamp());
     }
+
 }
 

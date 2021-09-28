@@ -2,7 +2,7 @@ package com.zfoo.net.handler.codec.udp;
 
 import com.zfoo.net.NetContext;
 import com.zfoo.net.packet.model.DecodedPacketInfo;
-import com.zfoo.net.packet.model.EncodePacketInfo;
+import com.zfoo.net.packet.model.EncodedPacketInfo;
 import com.zfoo.net.packet.model.UdpPacketAttachment;
 import com.zfoo.net.packet.service.PacketService;
 import com.zfoo.net.util.SessionUtils;
@@ -25,7 +25,7 @@ import java.util.List;
  * @author islandempty
  * @since 2021/7/23
  **/
-public class UdpCodecHandler extends MessageToMessageCodec<DatagramPacket, EncodePacketInfo> {
+public class UdpCodecHandler extends MessageToMessageCodec<DatagramPacket, EncodedPacketInfo> {
 
     private static final Logger logger = LoggerFactory.getLogger(UdpCodecHandler.class);
 
@@ -73,7 +73,7 @@ public class UdpCodecHandler extends MessageToMessageCodec<DatagramPacket, Encod
     }
 
     @Override
-    protected void encode(ChannelHandlerContext channelHandlerContext, EncodePacketInfo out, List<Object> list) throws Exception {
+    protected void encode(ChannelHandlerContext channelHandlerContext, EncodedPacketInfo out, List<Object> list) throws Exception {
         try {
             var byteBuf = channelHandlerContext.alloc().ioBuffer();
             var udpPacketAttachment = (UdpPacketAttachment) out.getPacketAttachment();

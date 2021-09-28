@@ -5,5 +5,5 @@ import com.zfoo.net.session.model.Session;
 import com.zfoo.protocol.IPacket;
 
 public interface IPacketReceiver {
-    void invoke(Session session, IPacket iPacket, IPacketAttachment attachment);
+    void invoke(Session session, IPacket packet, IPacketAttachment attachment);
 }

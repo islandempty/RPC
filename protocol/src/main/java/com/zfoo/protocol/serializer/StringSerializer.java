@@ -17,10 +17,7 @@ import com.zfoo.protocol.buffer.ByteBufUtils;
 import com.zfoo.protocol.registration.field.IFieldRegistration;
 import io.netty.buffer.ByteBuf;
 
-/**
- * @author jaysunxiao
- * @version 3.0
- */
+
 public class StringSerializer implements ISerializer {
 
 

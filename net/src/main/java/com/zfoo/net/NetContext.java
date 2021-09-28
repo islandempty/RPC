@@ -1,11 +1,14 @@
 package com.zfoo.net;
 
-import com.ie.util.ThreadUtils;
-import com.zfoo.event.manager.EventBus;
+import com.zfoo.net.core.AbstractClient;
+import com.zfoo.net.session.model.Session;
+import com.zfoo.protocol.collection.ArrayUtils;
+import com.zfoo.protocol.util.IOUtils;
+import com.zfoo.scheduler.model.StopWatch;
+import com.zfoo.util.ThreadUtils;
 import com.zfoo.net.config.manager.IConfigManager;
 import com.zfoo.net.consumer.service.IConsumer;
 import com.zfoo.net.core.AbstractServer;
-import com.zfoo.net.core.tcp.TcpClient;
 import com.zfoo.net.dispatcher.manager.IPacketDispatcher;
 import com.zfoo.net.packet.service.IPacketService;
 import com.zfoo.net.session.manager.ISessionManager;
@@ -18,9 +21,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ApplicationContextEvent;
+import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.Ordered;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -75,45 +81,64 @@ public class NetContext implements ApplicationListener<ApplicationContextEvent>,
 
     @Override
     public void onApplicationEvent(ApplicationContextEvent event) {
+        if (event instanceof ContextRefreshedEvent) {
+            var stopWatch = new StopWatch();
+            NetContext.instance = this;
+            instance.applicationContext = event.getApplicationContext();
+            instance.configManager = applicationContext.getBean(IConfigManager.class);
+            instance.packetService = applicationContext.getBean(IPacketService.class);
+            instance.packetDispatcher = applicationContext.getBean(IPacketDispatcher.class);
+            instance.consumer = applicationContext.getBean(IConsumer.class);
+            instance.sessionManager = applicationContext.getBean(ISessionManager.class);
 
+            instance.packetService.init();
+            instance.configManager.initRegistry();
+
+            logger.info("Net started successfully and cost [{}] seconds", stopWatch.costSeconds());
+        } else if (event instanceof ContextClosedEvent) {
+            shutdownBefore();
+            shutdownAfter();
+        }
     }
 
-    public synchronized static void shutdownBefore(){
+
+    public synchronized void shutdownBefore() {
         SchedulerContext.shutdown();
     }
 
-    public static synchronized void shutdownAfter(){
-        //关闭zookeeper客户端
-        NetContext.getConfigManager().getRegistry().shutdown();
+    public synchronized void shutdownAfter() {
+        // 关闭zookeeper的客户端
+        configManager.getRegistry().shutdown();
 
-        //关闭所有session
-        NetContext.getSessionManager().shutdown();
+        // 先关闭所有session
+        IOUtils.closeIO(ArrayUtils.listToArray(new ArrayList<>(sessionManager.getClientSessionMap().values()), Session.class));
+        IOUtils.closeIO(ArrayUtils.listToArray(new ArrayList<>(sessionManager.getServerSessionMap().values()), Session.class));
 
-        //关闭所有客户端和服务器
-        TcpClient.shutdown();
+        // 关闭客户端和服务器
+        AbstractClient.shutdown();
         AbstractServer.shutdownAllServers();
 
-        //关闭TaskManager
-
+        // 关闭TaskManager
         try {
-            Field field = EventBus.class.getDeclaredField("executors");
+            Field field = TaskManager.class.getDeclaredField("executors");
             ReflectionUtils.makeAccessible(field);
 
-            var executors = (ExecutorService[])ReflectionUtils.getField(field, TaskManager.class);
-            for (ExecutorService service :executors){
-                ThreadUtils.shutdown(service);
+            var executors = (ExecutorService[]) ReflectionUtils.getField(field, TaskManager.getInstance());
+            for (ExecutorService executor : executors) {
+                ThreadUtils.shutdown(executor);
             }
-
-        } catch (NoSuchFieldException e) {
+        } catch (Throwable e) {
             logger.error("Net thread pool failed shutdown: " + ExceptionUtils.getMessage(e));
             return;
         }
 
         logger.info("Net shutdown gracefully.");
     }
+
     @Override
     public int getOrder() {
         return 0;
     }
+
 }
 

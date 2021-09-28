@@ -1,11 +1,12 @@
 package com.zfoo.net.core.tcp;
 
 
-import com.ie.util.net.HostAndPort;
+import com.zfoo.util.net.HostAndPort;
 import com.zfoo.net.core.AbstractServer;
 import com.zfoo.net.handler.ServerDispatcherHandler;
 import com.zfoo.net.handler.codec.tcp.TcpCodeHandler;
 import com.zfoo.net.handler.idle.ServerIdleHandler;
+import com.zfoo.util.net.HostAndPort;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
@@ -22,9 +23,10 @@ public class TcpServer extends AbstractServer {
     }
 
     @Override
-    public ChannelInitializer<? extends Channel> channelChannelInitializer() {
+    public ChannelInitializer<SocketChannel> channelChannelInitializer() {
         return new ChannelHandlerInitializer();
     }
+
 
     private static class ChannelHandlerInitializer extends ChannelInitializer<SocketChannel> {
         @Override

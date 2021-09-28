@@ -16,7 +16,6 @@
 
     <xsd:complexType name="addressType">
         <xsd:sequence>
-            <!--sequence 元素要求组中的元素以指定的顺序出现在包含元素中。每个子元素可出现 0 次到任意次数。-->
             <xsd:element name="address" maxOccurs="unbounded" type="addressAttributeType"/>
         </xsd:sequence>
         <xsd:attribute name="center" type="xsd:string" use="required"/>

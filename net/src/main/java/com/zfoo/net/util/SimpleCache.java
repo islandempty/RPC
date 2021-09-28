@@ -3,6 +3,7 @@ package com.zfoo.net.util;
 import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.zfoo.event.manager.EventBus;
 import com.zfoo.protocol.collection.CollectionUtils;
 import com.zfoo.protocol.model.Pair;
 import com.zfoo.scheduler.manager.SchedulerBus;
@@ -33,27 +34,29 @@ public class SimpleCache<K, V> {
      */
     private static final int BATCH_RELOAD_SIZE = 1000;
 
-    private LoadingCache<K,V> cache;
+    private LoadingCache<K, V> cache;
     private ConcurrentLinkedQueue<K> linkedQueue;
 
     private long expiredAccessDuration;
     private long refreshDuration;
-    private Function<List<K>, List<Pair<K, V>>> batchReloadCallback;
+    private Function<List<K>, List<Pair<K, V>>> batchLoadCallback;
     private Function<K, V> defaultValueBuilder;
 
     /**
      * @param expiredAccessDuration 访问过期时间，毫秒；通常情况下，这个值比refreshDuration大会得到更好的缓存效果，一般是2倍
-     * @param refreshDuration       刷新实际毫秒；因为是通过后台scheduler去更新缓存，所以更新的refresh可能是这个值的2倍
+     * @param refreshDuration       刷新实际那，毫秒；因为是通过后台scheduler去更新缓存，所以更新的refresh可能是这个值的2倍
      * @param maxSize               缓存大小
-     * @param batchReloadCallback   一组key取value的回调方法
+     * @param batchLoadCallback     一组key取value的回调方法
      * @param defaultValueBuilder   默认值构建
      * @return 简单的缓存
      */
-    public static <K,V> SimpleCache<K,V> build(long expiredAccessDuration, long refreshDuration, long maxSize, Function<List<K>,List<Pair<K, V>>> batchReloadCallback
-    , Function<K, V> defaultValueBuilder){
+    public static <K, V> SimpleCache<K, V> build(long expiredAccessDuration, long refreshDuration, long maxSize
+            , Function<List<K>, List<Pair<K, V>>> batchLoadCallback
+            , Function<K, V> defaultValueBuilder) {
+
         var linkedQueue = new ConcurrentLinkedQueue<K>();
 
-        // 没有用guava的expireAfterWrite的原因是容易造成缓存击穿
+        // 没有用expireAfterWrite的原因是容易造成缓存击穿
         var cache = Caffeine.newBuilder()
                 .expireAfterAccess(expiredAccessDuration, TimeUnit.MILLISECONDS)
                 .refreshAfterWrite(refreshDuration, TimeUnit.MILLISECONDS)
@@ -61,48 +64,55 @@ public class SimpleCache<K, V> {
                 .recordStats()
                 .build(new CacheLoader<K, V>() {
                     @Override
-                    public @Nullable V load(@NonNull K k) throws Exception {
-                        // 因为通过SimpleCache封装过后，上层逻辑是不会调用guava的cache的get方法，所以理论上load不会执行
-                        var result = batchReloadCallback.apply(List.of(k));
-                        return CollectionUtils.isEmpty(result) ? defaultValueBuilder.apply(k) : result.get(0).getValue();
+                    public @Nullable V load(@NonNull K key) {
+                        var resultList = batchLoadCallback.apply(List.of(key));
+                        return CollectionUtils.isEmpty(resultList) ? defaultValueBuilder.apply(key) : resultList.get(0).getValue();
                     }
 
                     @Override
-                    public @Nullable V reload(@NonNull K key, @NonNull V oldValue) throws Exception {
-
+                    public @Nullable V reload(@NonNull K key, @NonNull V oldValue) {
+                        // 将待刷新的缓存放入队列，等Scheduler周期任务批量刷新老的缓存值
                         linkedQueue.offer(key);
-                        // 先返回老的值，等周期任务刷新新的值
+                        // 先返回老的值
                         return oldValue;
                     }
                 });
 
-        SchedulerBus.schedulerAtFixedRate(new Runnable() {
+
+        SchedulerBus.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-                var list = new ArrayList<K>();
-                while (!linkedQueue.isEmpty()){
-                    K key = linkedQueue.poll();
-                    list.add(key);
-                    if (list.size()>BATCH_RELOAD_SIZE){
-                        var result = batchReloadCallback.apply(list);
-                        result.forEach(it -> cache.put(it.getKey(), it.getValue()));
-                        list.clear();
+                // 不在任务调度线程中执行耗时任务，因为任务调度线程只有一个线程池
+                EventBus.asyncExecute().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        var list = new ArrayList<K>();
+                        while (!linkedQueue.isEmpty()) {
+                            var key = linkedQueue.poll();
+                            list.add(key);
+                            if (list.size() >= BATCH_RELOAD_SIZE) {
+                                var result = batchLoadCallback.apply(list);
+                                result.forEach(it -> cache.put(it.getKey(), it.getValue()));
+                                list.clear();
+                            }
+                        }
+
+                        if (CollectionUtils.isNotEmpty(list)) {
+                            var result = batchLoadCallback.apply(list);
+                            result.forEach(it -> cache.put(it.getKey(), it.getValue()));
+                        }
                     }
-                }
-                //如果要更新的list不足1000个缓存
-                if (CollectionUtils.isNotEmpty(list)){
-                    var result = batchReloadCallback.apply(list);
-                    result.forEach(it -> cache.put(it.getKey(), it.getValue()));
-                }
+                });
             }
-        },refreshDuration, TimeUnit.MILLISECONDS);
+        }, refreshDuration, TimeUnit.MILLISECONDS);
+
 
         var simpleCache = new SimpleCache<K, V>();
         simpleCache.cache = cache;
         simpleCache.linkedQueue = linkedQueue;
         simpleCache.expiredAccessDuration = expiredAccessDuration;
         simpleCache.refreshDuration = refreshDuration;
-        simpleCache.batchReloadCallback = batchReloadCallback;
+        simpleCache.batchLoadCallback = batchLoadCallback;
         simpleCache.defaultValueBuilder = defaultValueBuilder;
         return simpleCache;
     }
@@ -110,32 +120,31 @@ public class SimpleCache<K, V> {
     /**
      * 单个查找
      */
-    public V get(K k){
+    public V get(K k) {
         try {
             return cache.get(k);
-        }catch (Exception e){
-            var apply = defaultValueBuilder.apply(k);
-            cache.put(k ,apply);
-            return apply;
+        } catch (Exception e) {
+            var defaultValue = defaultValueBuilder.apply(k);
+            cache.put(k, defaultValue);
+            return defaultValue;
         }
     }
-
-
 
     /**
      * 异步刷新缓存
      */
-    public void invalidate(K k){
+    public void invalidate(K k) {
         cache.invalidate(k);
     }
 
-    public void put(K k, V v){
-        cache.put(k,v);
+    public void put(K k, V v) {
+        cache.put(k, v);
     }
+
     /**
      * 批量查找
      */
-    public Map<K ,V> batchGet(Collection<K> list){
+    public Map<K, V> batchGet(Collection<K> list) {
         if (CollectionUtils.isEmpty(list)) {
             return Collections.emptyMap();
         }
@@ -152,7 +161,7 @@ public class SimpleCache<K, V> {
         }
 
         if (CollectionUtils.isNotEmpty(notPresentIdSet)) {
-            batchReloadCallback.apply(new ArrayList<>(notPresentIdSet))
+            batchLoadCallback.apply(new ArrayList<>(notPresentIdSet))
                     .forEach(it -> {
                         result.put(it.getKey(), it.getValue());
                         cache.put(it.getKey(), it.getValue());
@@ -171,6 +180,5 @@ public class SimpleCache<K, V> {
 
         return result;
     }
-
 }
 

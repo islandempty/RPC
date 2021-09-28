@@ -1,6 +1,6 @@
 package com.zfoo.net.consumer.balancer;
 
-import com.ie.util.math.RandomUtils;
+import com.zfoo.util.math.RandomUtils;
 import com.zfoo.net.session.model.Session;
 import com.zfoo.protocol.IPacket;
 import com.zfoo.protocol.ProtocolManager;
@@ -15,34 +15,27 @@ import java.util.List;
  * @author islandempty
  * @since 2021/7/21
  **/
-public class RandomConsumerLoadBalancer extends AbstractConsumerLoadBalancer{
+public class RandomConsumerLoadBalancer extends AbstractConsumerLoadBalancer {
 
     private static final RandomConsumerLoadBalancer INSTANCE = new RandomConsumerLoadBalancer();
 
-    private RandomConsumerLoadBalancer(){
-
+    private RandomConsumerLoadBalancer() {
     }
 
-    public static RandomConsumerLoadBalancer getInstance(){
+    public static RandomConsumerLoadBalancer getInstance() {
         return INSTANCE;
     }
 
-    /**
-     * 只有一致性hash会使用这个argument参数，如果在一致性hash没有传入argument默认使用随机负载均衡
-     *
-     * @param packet   请求包
-     * @param argument 计算参数
-     * @return 一个服务提供者的session
-     */
     @Override
     public Session loadBalancer(IPacket packet, Object argument) {
         var module = ProtocolManager.moduleByProtocolId(packet.protocolId());
-        var sessionByModule = getSessionByModule(module);
+        var sessions = getSessionsByModule(module);
 
-        if (sessionByModule.isEmpty()){
-            throw new RunException("没有服务提供者提供服务[{}]", module);
+        if (sessions.isEmpty()) {
+            throw new RunException("一致性hash负载均衡[protocolId:{}]参数[argument:{}],没有服务提供者提供服务[module:{}]", packet.protocolId(), argument, module);
         }
-        return RandomUtils.randomEle(sessionByModule);
+
+        return RandomUtils.randomEle(sessions);
     }
 }
 

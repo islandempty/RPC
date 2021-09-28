@@ -1,6 +1,7 @@
 package com.zfoo.net.dispatcher.model.answer;
 
 import com.zfoo.net.packet.model.SignalPacketAttachment;
+import com.zfoo.net.task.model.SafeRunnable;
 import com.zfoo.protocol.IPacket;
 
 import java.util.ArrayList;
@@ -20,22 +21,27 @@ public class AsyncAnswer<T extends IPacket> implements IAsyncAnswer<T> {
 
     private Runnable askCallback;
 
+    private SafeRunnable notCompleteCallback;
+
+
     @Override
     public IAsyncAnswer<T> thenAccept(Consumer<T> consumer) {
         consumerList.add(consumer);
         return this;
     }
 
-    /**
-     * 接收到异步返回的消息，并处理这个消息，异步请求必须要调用这个方法
-     *
-     * @param consumer
-     */
     @Override
     public void whenComplete(Consumer<T> consumer) {
         thenAccept(consumer);
         askCallback.run();
     }
+
+    @Override
+    public IAsyncAnswer<T> notComplete(SafeRunnable notCompleteCallback) {
+        this.notCompleteCallback = notCompleteCallback;
+        return this;
+    }
+
     public void consume() {
         consumerList.forEach(it -> it.accept(futurePacket));
     }
@@ -62,6 +68,10 @@ public class AsyncAnswer<T extends IPacket> implements IAsyncAnswer<T> {
 
     public void setAskCallback(Runnable askCallback) {
         this.askCallback = askCallback;
+    }
+
+    public SafeRunnable getNotCompleteCallback() {
+        return notCompleteCallback;
     }
 
 }

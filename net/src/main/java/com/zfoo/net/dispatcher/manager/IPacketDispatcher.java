@@ -9,7 +9,7 @@ import org.springframework.lang.Nullable;
 
 public interface IPacketDispatcher {
 
-    void send(Session session, IPacket iPacket);
+    void send(Session session, IPacket packet);
 
     /**
      * send()和receive()是消息的发送和接收的入口，可以直接调用，是最轻量级发送和接收方式
@@ -18,7 +18,7 @@ public interface IPacketDispatcher {
 
     void receive(Session session, IPacket packet, @Nullable IPacketAttachment packetAttachment);
 
-    void atReceive(Session session, IPacket packet, @Nullable IPacketAttachment packetAttachment);
+    void atReceiver(Session session, IPacket packet, @Nullable IPacketAttachment packetAttachment);
 
     /**
      * attention：syncRequest和asyncRequest只能客户端调用
@@ -39,7 +39,7 @@ public interface IPacketDispatcher {
      * @return 服务器返回的消息Response
      * @throws Exception 如果超时或者其它异常
      */
-    <T extends IPacket> SyncAnswer<T> syncAck(Session session, IPacket packet, @Nullable Class<T> answerClass, @Nullable Object argument) throws Exception;
+    <T extends IPacket> SyncAnswer<T> syncAsk(Session session, IPacket packet, @Nullable Class<T> answerClass, @Nullable Object argument) throws Exception;
 
     <T extends IPacket> AsyncAnswer<T> asyncAsk(Session session, IPacket packet, @Nullable Class<T> answerClass,@Nullable Object argument);
 }

@@ -1,7 +1,7 @@
 package com.zfoo.net.packet.service;
 
-import com.ie.util.DomUtils;
 import com.zfoo.net.NetContext;
+import com.zfoo.net.dispatcher.manager.PacketBus;
 import com.zfoo.net.packet.model.DecodedPacketInfo;
 import com.zfoo.net.packet.model.IPacketAttachment;
 import com.zfoo.protocol.IPacket;
@@ -11,6 +11,7 @@ import com.zfoo.protocol.exception.ExceptionUtils;
 import com.zfoo.protocol.generate.GenerateOperation;
 import com.zfoo.protocol.generate.GenerateProtocolFile;
 import com.zfoo.protocol.registration.IProtocolRegistration;
+import com.zfoo.protocol.util.DomUtils;
 import com.zfoo.protocol.xml.XmlProtocols;
 import io.netty.buffer.ByteBuf;
 import org.slf4j.Logger;
@@ -52,12 +53,12 @@ public class PacketService implements IPacketService{
     public static final String NET_COMMON_MODULE = "common";
 
     private Predicate<IProtocolRegistration> netGenerateProtocolFilter = registration
-            -> ProtocolManager.moduleByProtocolId(registration.module()).getName().matches(NET_COMMON_MODULE)
+            -> ProtocolManager.moduleByModuleId(registration.module()).getName().matches(NET_COMMON_MODULE)
             || registration.protocolConstructor().getDeclaringClass().getSimpleName().endsWith(NET_REQUEST_SUFFIX)
             || registration.protocolConstructor().getDeclaringClass().getSimpleName().endsWith(NET_RESPONSE_SUFFIX)
             || registration.protocolConstructor().getDeclaringClass().getSimpleName().endsWith(NET_NOTICE_SUFFIX);
 
-    public PacketService(){
+    public PacketService() {
 
     }
 
@@ -69,42 +70,53 @@ public class PacketService implements IPacketService{
 
         var foldProtocol = NetContext.getConfigManager().getLocalConfig().isFoldProtocol();
         var protocolParam = NetContext.getConfigManager().getLocalConfig().getProtocolParam();
-
-
+        var generateJsProtocol = NetContext.getConfigManager().getLocalConfig().isGenerateJsProtocol();
+        var generateCsharpProtocol = NetContext.getConfigManager().getLocalConfig().isGenerateCsProtocol();
+        var generateLuaProtocol = NetContext.getConfigManager().getLocalConfig().isGenerateLuaProtocol();
         var generateOperation = new GenerateOperation();
         generateOperation.setFoldProtocol(foldProtocol);
         generateOperation.setProtocolParam(protocolParam);
+        generateOperation.setGenerateJsProtocol(generateJsProtocol);
+        generateOperation.setGenerateCsharpProtocol(generateCsharpProtocol);
+        generateOperation.setGenerateLuaProtocol(generateLuaProtocol);
 
-
-        //设置生成协议过滤器
+        // 设置生成协议的过滤器
         GenerateProtocolFile.generateProtocolFilter = netGenerateProtocolFilter;
 
-        //解析protocol.xml文件，并将协议生成ProtocolRegistration
+        // 解析protocol.xml文件，并将协议生成ProtocolRegistration
         var resource = applicationContext.getResource(ResourceUtils.CLASSPATH_URL_PREFIX + protocolLocation);
-
         try {
             var xmlProtocols = DomUtils.inputStream2Object(resource.getInputStream(), XmlProtocols.class);
             ProtocolManager.initProtocol(xmlProtocols, generateOperation);
-        }catch (IOException e){
+        } catch (IOException e) {
             logger.error(ExceptionUtils.getMessage(e));
             throw new RuntimeException(e);
+        }
+
+        // 注册协议接收器
+        var beanNames = applicationContext.getBeanDefinitionNames();
+        for (var beanName : beanNames) {
+            var bean = applicationContext.getBean(beanName);
+            PacketBus.registerPacketReceiverDefinition(bean);
         }
     }
 
     @Override
     public DecodedPacketInfo read(ByteBuf buffer) {
+        // 包的长度在上一层已经解析过
 
+        // 解析包体
         var packet = ProtocolManager.read(buffer);
-        //解析包的附加包
+        // 解析包的附加包
         var attachment = ByteBufUtils.readBoolean(buffer);
-        var packetAttachment = attachment ? ((IPacketAttachment)ProtocolManager.read(buffer)): null;
-        return DecodedPacketInfo.valueOf(packet,packetAttachment);
+        var packetAttachment = attachment ? ((IPacketAttachment) ProtocolManager.read(buffer)) : null;
+        return DecodedPacketInfo.valueOf(packet, packetAttachment);
     }
 
     @Override
     public void write(ByteBuf buffer, IPacket packet, IPacketAttachment packetAttachment) {
 
-        if (packet == null){
+        if (packet == null) {
             logger.error("packet is null and can not be sent.");
             return;
         }

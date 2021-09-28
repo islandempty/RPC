@@ -2,7 +2,7 @@ package com.zfoo.net.handler.codec.websocket;
 
 import com.zfoo.net.NetContext;
 import com.zfoo.net.packet.model.DecodedPacketInfo;
-import com.zfoo.net.packet.model.EncodePacketInfo;
+import com.zfoo.net.packet.model.EncodedPacketInfo;
 import com.zfoo.net.packet.service.PacketService;
 import com.zfoo.net.util.SessionUtils;
 import com.zfoo.protocol.util.JsonUtils;
@@ -22,7 +22,7 @@ import java.util.List;
  * @author islandempty
  * @since 2021/7/23
  **/
-public class WebSocketCodecHandler extends MessageToMessageCodec<WebSocketFrame, EncodePacketInfo> {
+public class WebSocketCodecHandler extends MessageToMessageCodec<WebSocketFrame, EncodedPacketInfo> {
 
     private static final Logger logger = LoggerFactory.getLogger(WebSocketCodecHandler.class);
 
@@ -67,7 +67,7 @@ public class WebSocketCodecHandler extends MessageToMessageCodec<WebSocketFrame,
     }
 
     @Override
-    protected void encode(ChannelHandlerContext channelHandlerContext, EncodePacketInfo out, List<Object> list) throws Exception {
+    protected void encode(ChannelHandlerContext channelHandlerContext, EncodedPacketInfo out, List<Object> list) throws Exception {
         try {
             var byteBuf = channelHandlerContext.alloc().ioBuffer();
 

@@ -15,7 +15,6 @@ import java.util.function.Supplier;
  **/
 public class SingleCache<V> {
 
-    //持续时间
     private long refreshDuration;
 
     private Supplier<V> supplier;
@@ -25,7 +24,13 @@ public class SingleCache<V> {
     private volatile long refreshTime;
     private final Lock lock = new ReentrantLock();
 
-    public static <V> SingleCache<V> build(long refreshDuration, Supplier<V> supplier){
+
+    /**
+     * @param refreshDuration 刷新实际那，毫秒
+     * @param supplier        缓存提供者
+     * @return 简单的缓存
+     */
+    public static <V> SingleCache<V> build(long refreshDuration, Supplier<V> supplier) {
         var cache = new SingleCache<V>();
         cache.refreshDuration = refreshDuration;
         cache.supplier = supplier;
@@ -34,13 +39,14 @@ public class SingleCache<V> {
         return cache;
     }
 
-    public V get(){
+
+    public V get() {
         var now = TimeUtils.now();
-        //使用双重检测
-        if (now > refreshTime){
+        // 使用双重检测锁的方式
+        if (now > refreshTime) {
             lock.lock();
             try {
-                if (now> refreshTime){
+                if (now > refreshTime) {
                     refreshTime = now + refreshDuration;
                     EventBus.asyncExecute().execute(new Runnable() {
                         @Override
@@ -55,7 +61,6 @@ public class SingleCache<V> {
         }
         return cache;
     }
-
 
 }
 

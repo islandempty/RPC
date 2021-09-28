@@ -11,14 +11,25 @@ public class Message implements IPacket {
 
     public static final transient short PROTOCOL_ID = 100;
 
+    public static final Message SUCCESS = valueSuccess(null);
+    public static final Message FAIL = valueFail(null);
+
     private byte module;
 
     /**
-     * 只有1位成功
+     * 1是成功，其它的均视为失败的请求
      */
     private int code;
 
     private String message;
+
+    public boolean success() {
+        return code == 1;
+    }
+
+    public boolean fail() {
+        return code == 0;
+    }
 
     public static Message valueOf(IPacket packet, int code, String message) {
         var mess = new Message();
@@ -32,19 +43,23 @@ public class Message implements IPacket {
         return Message.valueOf(packet, code, null);
     }
 
+    public static Message valueFail(String message) {
+        var mess = new Message();
+        mess.code = 0;
+        mess.message = message;
+        return mess;
+    }
 
-    /**
-     * 这个类的协议号
-     *
-     * @return 协议号
-     */
+    public static Message valueSuccess(String message) {
+        var mess = new Message();
+        mess.code = 1;
+        mess.message = message;
+        return mess;
+    }
+
     @Override
     public short protocolId() {
         return PROTOCOL_ID;
-    }
-
-    public boolean success() {
-        return code == 1;
     }
 
     public byte getModule() {

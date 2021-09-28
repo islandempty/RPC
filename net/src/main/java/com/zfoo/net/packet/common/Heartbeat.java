@@ -22,7 +22,7 @@ public class Heartbeat implements IPacket {
      */
     @Override
     public short protocolId() {
-        return protocolId();
+        return PROTOCOL_ID;
     }
 
     public static short heartbeatProtocolId(){

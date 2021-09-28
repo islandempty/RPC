@@ -1,6 +1,6 @@
 package com.zfoo.event.model.event;
 
-import com.ie.util.math.RandomUtils;
+import com.zfoo.util.math.RandomUtils;
 
 public interface IEvent {
 

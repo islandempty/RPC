@@ -1,6 +1,6 @@
 package com.zfoo.event;
 
-import com.ie.util.ThreadUtils;
+import com.zfoo.util.ThreadUtils;
 import com.zfoo.event.manager.EventBus;
 import org.junit.Ignore;
 import org.junit.Test;

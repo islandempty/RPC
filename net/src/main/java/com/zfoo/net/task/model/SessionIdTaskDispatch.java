@@ -1,6 +1,6 @@
 package com.zfoo.net.task.model;
 
-import com.ie.util.math.HashUtils;
+import com.zfoo.util.math.HashUtils;
 import com.zfoo.net.task.TaskManager;
 
 import java.util.concurrent.ExecutorService;

@@ -1,6 +1,6 @@
 package com.zfoo.scheduler.model.vo;
 
-import com.ie.util.security.IdUtils;
+import com.zfoo.util.security.IdUtils;
 import com.zfoo.protocol.util.StringUtils;
 import com.zfoo.scheduler.schema.NamespaceHandler;
 import javassist.*;

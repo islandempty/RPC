@@ -116,7 +116,7 @@ public abstract class FileUtils {
      * @param file
      * @return 没找到直接返回
      */
-    public static File searchFileProject(File file){
+    public static File searchFileInProject(File file){
         return searchFileInProject(new File(getProAbsPath()), file.getName());
     }
 

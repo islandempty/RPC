@@ -1,6 +1,6 @@
 package com.zfoo.net.packet.model;
 
-import com.ie.util.math.RandomUtils;
+import com.zfoo.util.math.RandomUtils;
 
 /**
  * @author islandempty

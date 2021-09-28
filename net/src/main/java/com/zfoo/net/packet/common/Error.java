@@ -19,11 +19,6 @@ public class Error implements IPacket {
 
     private String errorMessage;
 
-    /**
-     * 这个类的协议号
-     *
-     * @return 协议号
-     */
     @Override
     public short protocolId() {
         return PROTOCOL_ID;
@@ -40,20 +35,20 @@ public class Error implements IPacket {
         return message.getMessage();
     }
 
-    public static Error valueOf(int module, int errorCode, String errorMessage){
-        Error error = new Error();
-        error.module = module;
-        error.errorCode = errorCode;
-        error.errorMessage = errorMessage;
-        return error;
+    public static Error valueOf(int module, int errorCode, String errorMessage) {
+        Error response = new Error();
+        response.module = module;
+        response.errorCode = errorCode;
+        response.errorMessage = errorMessage;
+        return response;
     }
 
-    public static Error valueOf(IPacket iPacket, int errorCode, String errorMessage){
-        Error error = new Error();
-        error.module = ProtocolManager.getProtocol(iPacket.protocolId()).module();
-        error.errorCode = errorCode;
-        error.errorMessage = errorMessage;
-        return error;
+    public static Error valueOf(IPacket packet, int errorCode, String errorMessage) {
+        Error response = new Error();
+        response.module = ProtocolManager.getProtocol(packet.protocolId()).module();
+        response.errorCode = errorCode;
+        response.errorMessage = errorMessage;
+        return response;
     }
 
     public static Error valueOf(IPacket packet, int errorCode) {

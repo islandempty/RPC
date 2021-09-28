@@ -42,11 +42,11 @@ public class PacketReceiverDefinition implements IPacketReceiver{
     }
 
     @Override
-    public void invoke(Session session, IPacket iPacket, IPacketAttachment attachment) {
+    public void invoke(Session session, IPacket Packet, IPacketAttachment attachment) {
         if (attachmentClazz == null){
-            ReflectionUtils.invokeMethod(bean, method, session, iPacket);
+            ReflectionUtils.invokeMethod(bean, method, session, Packet);
         }else {
-            ReflectionUtils.invokeMethod(bean, method, session, iPacket, attachment);
+            ReflectionUtils.invokeMethod(bean, method, session, Packet, attachment);
         }
     }
 

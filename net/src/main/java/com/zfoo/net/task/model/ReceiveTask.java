@@ -9,7 +9,7 @@ import com.zfoo.protocol.IPacket;
  * @author islandempty
  * @since 2021/7/16
  **/
-public class ReceiveTask implements Runnable{
+public final class ReceiveTask implements Runnable{
     private Session session;
     private IPacket packet;
     private IPacketAttachment packetAttachment;
@@ -22,7 +22,7 @@ public class ReceiveTask implements Runnable{
 
     @Override
     public void run() {
-        NetContext.getDispatcher().atReceive(session, packet, packetAttachment);
+        NetContext.getDispatcher().atReceiver(session, packet, packetAttachment);
     }
 
     public Session getSession() {

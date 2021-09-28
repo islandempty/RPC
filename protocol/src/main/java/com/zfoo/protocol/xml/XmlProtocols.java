@@ -16,10 +16,10 @@ import java.util.List;
 @JacksonXmlRootElement(localName = "protocols")
 public class XmlProtocols {
 
-    @JacksonXmlProperty(isAttribute = true,localName = "author")
+    @JacksonXmlProperty(isAttribute = true, localName = "author")
     private String author;
 
-    @JacksonXmlProperty(localName = "modules")
+    @JacksonXmlProperty(localName = "module")
     @JacksonXmlElementWrapper(useWrapping = false)
     private List<XmlModuleDefinition> modules;
 

@@ -38,8 +38,6 @@ import java.util.stream.Collectors;
 /**
  * 对应于ProtocolRegistration
  *
- * @author jaysunxiao
- * @version 3.0
  */
 public abstract class EnhanceUtils {
 

@@ -6,6 +6,7 @@ import com.zfoo.net.dispatcher.model.vo.EnhanceUtils;
 import com.zfoo.net.dispatcher.model.vo.IPacketReceiver;
 import com.zfoo.net.dispatcher.model.vo.PacketReceiverDefinition;
 import com.zfoo.net.packet.model.GatewayPacketAttachment;
+import com.zfoo.net.packet.model.HttpPacketAttachment;
 import com.zfoo.net.packet.model.IPacketAttachment;
 import com.zfoo.net.packet.model.UdpPacketAttachment;
 import com.zfoo.net.packet.service.PacketService;
@@ -13,6 +14,8 @@ import com.zfoo.net.session.model.Session;
 import com.zfoo.protocol.IPacket;
 import com.zfoo.protocol.ProtocolManager;
 import com.zfoo.protocol.collection.ArrayUtils;
+import com.zfoo.protocol.exception.RunException;
+import com.zfoo.protocol.registration.IProtocolRegistration;
 import com.zfoo.protocol.util.AssertionUtils;
 import com.zfoo.protocol.util.ReflectionUtils;
 import com.zfoo.protocol.util.StringUtils;
@@ -33,7 +36,7 @@ public abstract class PacketBus {
     /**
      * 客户端和服务端都有接受packet的方法，packetReceiverList对应的就是包的接收方法
      */
-    private static final IPacketReceiver[] packetReceiverList = new IPacketReceiver[ProtocolManager.MAX_PROTOCOL_NUM];
+    public static final IProtocolRegistration[] packetReceiverList = ProtocolManager.protocols;
 
     /**
      * 正常消息的接收
@@ -44,17 +47,18 @@ public abstract class PacketBus {
      * @param packet
      * @param packetAttachment
      */
-    public static void submit(Session session, IPacket packet, IPacketAttachment packetAttachment){
-        var packetReceiver = packetReceiverList[packet.protocolId()];
-        if (packetReceiver == null){
+    public static void submit(Session session, IPacket packet, IPacketAttachment packetAttachment) {
+        var packetReceiver = (IPacketReceiver) packetReceiverList[packet.protocolId()].receiver();
+        if (packetReceiver == null) {
             throw new RuntimeException(StringUtils.format("no any packetReceiverDefinition found for this [packet:{}]", packet.getClass().getName()));
         }
 
-        //调用PacketReceiver
-        packetReceiver.invoke(session, packet,packetAttachment);
+        // 调用PacketReceiver
+        packetReceiver.invoke(session, packet, packetAttachment);
     }
 
-    public static void registerPacketReceiverDefinition(Object bean){
+
+    public static void registerPacketReceiverDefinition(Object bean) {
         var clazz = bean.getClass();
 
         var methods = ReflectionUtils.getMethodsByAnnoInPOJOClass(clazz, PacketReceiver.class);
@@ -62,7 +66,7 @@ public abstract class PacketBus {
             return;
         }
 
-        if (!ReflectionUtils.isPOJOClass(clazz)) {
+        if (!ReflectionUtils.isPojoClass(clazz)) {
             logger.warn("消息注册类[{}]不是POJO类，父类的消息接收不会被扫描到", clazz);
         }
 
@@ -100,7 +104,7 @@ public abstract class PacketBus {
             // 如果以Ask结尾的请求，那么attachment不能为GatewayAttachment
             if (attachmentClazz != null) {
                 if (packetName.endsWith(PacketService.NET_REQUEST_SUFFIX)) {
-                    AssertionUtils.isTrue(attachmentClazz.equals(GatewayPacketAttachment.class) || attachmentClazz.equals(UdpPacketAttachment.class)
+                    AssertionUtils.isTrue(attachmentClazz.equals(GatewayPacketAttachment.class) || attachmentClazz.equals(UdpPacketAttachment.class) || attachmentClazz.equals(HttpPacketAttachment.class)
                             , "[class:{}] [method:{}] [packet:{}] must use [attachment:{}]!", bean.getClass().getName(), methodName, packetName, GatewayPacketAttachment.class.getCanonicalName());
                 } else if (packetName.endsWith(PacketService.NET_ASK_SUFFIX)) {
                     AssertionUtils.isTrue(!attachmentClazz.equals(GatewayPacketAttachment.class)
@@ -114,9 +118,16 @@ public abstract class PacketBus {
                 var protocolId = (short) protocolIdField.get(null);
                 var receiverDefinition = new PacketReceiverDefinition(bean, method, packetClazz, attachmentClazz);
                 var enhanceReceiverDefinition = EnhanceUtils.createPacketReceiver(receiverDefinition);
-                packetReceiverList[protocolId] = enhanceReceiverDefinition;
+
+                // 将receiver注册到IProtocolRegistration
+                var protocolRegistration = packetReceiverList[protocolId];
+                AssertionUtils.notNull(protocolRegistration, "协议类[class:{}][protocolId:{}]没有注册", packetClazz.getSimpleName(), protocolId);
+
+                var receiverField = ReflectionUtils.getFieldByNameInPOJOClass(protocolRegistration.getClass(), "receiver");
+                ReflectionUtils.makeAccessible(receiverField);
+                ReflectionUtils.setField(receiverField, protocolRegistration, enhanceReceiverDefinition);
             } catch (Throwable t) {
-                throw new RuntimeException(t);
+                throw new RunException(t, "解析协议类[class:{}]未知异常", packetClazz.getSimpleName());
             }
         }
     }

@@ -1,6 +1,6 @@
 package com.zfoo.net.consumer.registry;
 
-import com.ie.util.security.IdUtils;
+import com.zfoo.util.security.IdUtils;
 import com.zfoo.net.config.model.ConsumerConfig;
 import com.zfoo.net.config.model.ProviderConfig;
 import com.zfoo.protocol.collection.CollectionUtils;
@@ -30,11 +30,13 @@ public class RegisterVO {
     private ProviderConfig providerConfig;
     private ConsumerConfig consumerConfig;
 
-    public static boolean providerHasConsumerModule(RegisterVO provider, RegisterVO consumer){
+
+    public static boolean providerHasConsumerModule(RegisterVO provider, RegisterVO consumer) {
         if (Objects.isNull(provider) || Objects.isNull(provider.providerConfig) || CollectionUtils.isEmpty(provider.providerConfig.getModules())
                 || Objects.isNull(consumer) || Objects.isNull(consumer.consumerConfig) || CollectionUtils.isEmpty(consumer.consumerConfig.getModules())) {
             return false;
         }
+
         return provider.getProviderConfig().getModules().stream().anyMatch(it -> consumer.getConsumerConfig().getModules().contains(it));
     }
 
@@ -76,11 +78,10 @@ public class RegisterVO {
         }
     }
 
-    private static List<ProtocolModule> parseModules(String str){
+    private static List<ProtocolModule> parseModules(String str) {
         var moduleSplits = StringUtils.substringBeforeLast(
-                StringUtils.substringAfterFirst(str, StringUtils.LEFT_SQUARE_BRACKET),
-                StringUtils.RIGHT_SQUARE_BRACKET
-        ).split(StringUtils.COMMA);
+                StringUtils.substringAfterFirst(str, StringUtils.LEFT_SQUARE_BRACKET)
+                , StringUtils.RIGHT_SQUARE_BRACKET).split(StringUtils.COMMA);
 
         var modules = Arrays.stream(moduleSplits)
                 .map(it -> it.trim())
@@ -94,7 +95,7 @@ public class RegisterVO {
         return toString();
     }
 
-    public String toConsumerString(){
+    public String toConsumerString() {
         return toString() +
                 StringUtils.SPACE + StringUtils.VERTICAL_BAR + StringUtils.SPACE +
                 uuid;

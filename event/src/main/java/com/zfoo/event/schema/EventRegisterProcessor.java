@@ -33,7 +33,7 @@ public class EventRegisterProcessor implements BeanPostProcessor {
             return bean;
         }
 
-        if (!ReflectionUtils.isPOJOClass(clazz)){
+        if (!ReflectionUtils.isPojoClass(clazz)){
             logger.warn("事件注册类[{}]不是POJO类，父类的事件接收不会被扫描到",clazz);
         }
 

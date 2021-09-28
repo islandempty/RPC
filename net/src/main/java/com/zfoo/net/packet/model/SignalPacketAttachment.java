@@ -1,11 +1,12 @@
 package com.zfoo.net.packet.model;
 
-import com.ie.util.security.IdUtils;
+import com.zfoo.util.security.IdUtils;
 import com.zfoo.protocol.IPacket;
 import com.zfoo.scheduler.util.TimeUtils;
 
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
@@ -18,11 +19,12 @@ public class SignalPacketAttachment implements IPacketAttachment{
 
     public static final transient short PROTOCOL_ID = 0;
 
+    private static final AtomicInteger ATOMIC_PACKET_ID = new AtomicInteger(0);
 
     /**
      * 唯一标识一个packet， 唯一表示一个PacketAttachment，hashcode() and equals() 也通过packetId计算
      */
-    private int packetId = IdUtils.getLocalIntId();
+    private int packetId = ATOMIC_PACKET_ID.incrementAndGet();
 
     /**
      * 用来在TaskManage中计算一致性hash的参数
@@ -38,25 +40,21 @@ public class SignalPacketAttachment implements IPacketAttachment{
      * 客户端发送的时间
      */
     private transient long timestamp = TimeUtils.now();
+
     /**
      * 客户端收到服务器回复的时候回调的方法
      */
     private transient CompletableFuture<IPacket> responseFuture = new CompletableFuture<>();
 
-    public SignalPacketAttachment(){
-
+    public SignalPacketAttachment() {
     }
+
 
     @Override
     public PacketAttachmentType packetType() {
         return PacketAttachmentType.SIGNAL_PACKET;
     }
 
-    /**
-     * 用来确定这条消息在哪一个线程处理
-     *
-     * @return 一致性hashId
-     */
     @Override
     public int executorConsistentHash() {
         return executorConsistentHash;
@@ -69,15 +67,12 @@ public class SignalPacketAttachment implements IPacketAttachment{
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
     }
-    /**
-     * 这个类的协议号
-     *
-     * @return 协议号
-     */
+
     @Override
     public short protocolId() {
         return PROTOCOL_ID;
     }
+
 
     @Override
     public boolean equals(Object o) {

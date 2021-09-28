@@ -1,6 +1,6 @@
 package com.zfoo.net.core.tcp;
 
-import com.ie.util.net.HostAndPort;
+import com.zfoo.util.net.HostAndPort;
 import com.zfoo.net.core.AbstractClient;
 import com.zfoo.net.handler.ClientDispatcherHandler;
 import com.zfoo.net.handler.codec.tcp.TcpCodeHandler;
@@ -20,21 +20,21 @@ public class TcpClient extends AbstractClient {
         super(host);
     }
 
-
     @Override
     public ChannelInitializer<? extends Channel> channelChannelInitializer() {
-        return null;
+        return new ChannelHandlerInitializer();
     }
 
-    private static class ChannelHandlerInitializer extends ChannelInitializer<SocketChannel>{
+
+    private static class ChannelHandlerInitializer extends ChannelInitializer<SocketChannel> {
         @Override
-        protected void initChannel(SocketChannel socketChannel) throws Exception {
-            //心跳检测
-            socketChannel.pipeline().addLast(new IdleStateHandler(0,0,60));
-            socketChannel.pipeline().addLast(new ClientIdleHandler());
-            socketChannel.pipeline().addLast(new TcpCodeHandler());
-            socketChannel.pipeline().addLast(new ClientDispatcherHandler());
+        protected void initChannel(SocketChannel channel) {
+            channel.pipeline().addLast(new IdleStateHandler(0, 0, 60));
+            channel.pipeline().addLast(new ClientIdleHandler());
+            channel.pipeline().addLast(new TcpCodeHandler());
+            channel.pipeline().addLast(new ClientDispatcherHandler());
         }
     }
-}
 
+
+}

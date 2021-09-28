@@ -1,6 +1,6 @@
 package com.zfoo.net.task;
 
-import com.ie.util.math.RandomUtils;
+import com.zfoo.util.math.RandomUtils;
 import com.zfoo.net.NetContext;
 import com.zfoo.net.task.model.AbstractTaskDispatch;
 import com.zfoo.net.task.model.ITaskDispatch;
@@ -30,15 +30,15 @@ public final class TaskManager implements ITaskManager{
 
     private static final ITaskDispatch taskDispatch;
 
+
     /**
      * 使用不同的线程池，让线程池之间实现隔离，互不影响
      */
     private static final ExecutorService[] executors;
 
-
     static {
         var localConfig = NetContext.getConfigManager().getLocalConfig();
-        var providerConfig = localConfig.getProviderConfig();
+        var providerConfig = localConfig.getProvider();
 
         var dispatch = providerConfig == null ? "consistent-hash" : providerConfig.getDispatch();
         var dispatchThread = (providerConfig == null || StringUtils.isBlank(providerConfig.getDispatchThread()))
@@ -76,8 +76,6 @@ public final class TaskManager implements ITaskManager{
         }
     }
 
-
-
     private TaskManager() {
     }
 
@@ -91,13 +89,8 @@ public final class TaskManager implements ITaskManager{
     }
 
     @Override
-    public ExecutorService getExecutorByConsistentHash(int executorConsistentHash){
-        if (executorConsistentHash >= 0){
-            return executors[Math.abs(executorConsistentHash % EXECUTOR_SIZE)];
-        }else {
-            return executors[RandomUtils.randomInt(TaskManager.EXECUTOR_SIZE)];
-        }
+    public ExecutorService getExecutorByConsistentHash(int executorConsistentHash) {
+        return executors[Math.abs(executorConsistentHash % EXECUTOR_SIZE)];
     }
-
 }
 

@@ -1,6 +1,6 @@
 package com.zfoo.scheduler;
 
-import com.ie.util.ThreadUtils;
+import com.zfoo.util.ThreadUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.context.support.ClassPathXmlApplicationContext;

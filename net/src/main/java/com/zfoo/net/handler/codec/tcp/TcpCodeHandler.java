@@ -2,7 +2,7 @@ package com.zfoo.net.handler.codec.tcp;
 
 import com.zfoo.net.NetContext;
 import com.zfoo.net.packet.model.DecodedPacketInfo;
-import com.zfoo.net.packet.model.EncodePacketInfo;
+import com.zfoo.net.packet.model.EncodedPacketInfo;
 import com.zfoo.net.packet.service.PacketService;
 import com.zfoo.net.util.SessionUtils;
 import com.zfoo.protocol.util.StringUtils;
@@ -22,29 +22,29 @@ import java.util.List;
  * @author islandempty
  * @since 2021/7/23
  **/
-public class TcpCodeHandler extends ByteToMessageCodec<EncodePacketInfo> {
+public class TcpCodeHandler extends ByteToMessageCodec<EncodedPacketInfo>  {
 
     private static final Logger logger = LoggerFactory.getLogger(TcpCodeHandler.class);
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-        //不够读一个int
-        if (in.readableBytes() <= PacketService.PACKET_HEAD_LENGTH){
+    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) {
+        // 不够读一个int
+        if (in.readableBytes() <= PacketService.PACKET_HEAD_LENGTH) {
             return;
         }
         in.markReaderIndex();
         var length = in.readInt();
 
-        //如果长度非法,则抛出异常断开连接
-        if (length < 0){
+        // 如果长度非法，则抛出异常断开连接
+        if (length < 0) {
             throw new IllegalArgumentException(StringUtils.format("[session:{}]的包头长度[length:{}]非法"
                     , SessionUtils.sessionInfo(ctx), length));
         }
-        //markReaderIndex和resetReaderIndex是一个成对的操作。markReaderIndex可以打一个标记，调用resetReaderIndex可以把readerIndex重置到原来打标记的位置。
 
-        //ByteBuf里的数据大小
-        if (in.readableBytes() < length){
+        // ByteBuf里的数据太小
+        if (in.readableBytes() < length) {
             in.resetReaderIndex();
+            return;
         }
 
         ByteBuf tmpByteBuf = null;
@@ -52,7 +52,7 @@ public class TcpCodeHandler extends ByteToMessageCodec<EncodePacketInfo> {
             tmpByteBuf = in.readRetainedSlice(length);
             DecodedPacketInfo packetInfo = NetContext.getPacketService().read(tmpByteBuf);
             out.add(packetInfo);
-        }catch (Exception e) {
+        } catch (Exception e) {
             logger.error("[session:{}]解码exception异常", SessionUtils.sessionInfo(ctx), e);
             throw e;
         } catch (Throwable t) {
@@ -61,18 +61,17 @@ public class TcpCodeHandler extends ByteToMessageCodec<EncodePacketInfo> {
         } finally {
             ReferenceCountUtil.release(tmpByteBuf);
         }
-
     }
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, EncodePacketInfo PacketInfo, ByteBuf out) throws Exception {
+    protected void encode(ChannelHandlerContext ctx, EncodedPacketInfo packetInfo, ByteBuf out) {
         try {
-            NetContext.getPacketService().write(out, PacketInfo.getPacket(), PacketInfo.getPacketAttachment());
-        }catch (Exception e) {
-            logger.error("[session:{}][{}]编码exception异常", SessionUtils.sessionInfo(ctx), PacketInfo.getPacket().getClass().getSimpleName(), e);
+            NetContext.getPacketService().write(out, packetInfo.getPacket(), packetInfo.getPacketAttachment());
+        } catch (Exception e) {
+            logger.error("[session:{}][{}]编码exception异常", SessionUtils.sessionInfo(ctx), packetInfo.getPacket().getClass().getSimpleName(), e);
             throw e;
         } catch (Throwable t) {
-            logger.error("[session:{}][{}]编码throwable错误", SessionUtils.sessionInfo(ctx), PacketInfo.getPacket().getClass().getSimpleName(), t);
+            logger.error("[session:{}][{}]编码throwable错误", SessionUtils.sessionInfo(ctx), packetInfo.getPacket().getClass().getSimpleName(), t);
             throw t;
         }
     }

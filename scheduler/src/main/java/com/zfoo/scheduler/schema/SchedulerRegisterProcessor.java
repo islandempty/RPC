@@ -29,7 +29,7 @@ public class SchedulerRegisterProcessor implements BeanPostProcessor {
             return bean;
         }
 
-        if (!ReflectionUtils.isPOJOClass(clazz)){
+        if (!ReflectionUtils.isPojoClass(clazz)){
             logger.warn("调度注册类[{}]不是POJO类，父类的调度不会被扫描到", clazz);
         }
 

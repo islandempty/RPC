@@ -1,7 +1,8 @@
 package com.zfoo.net.consumer.service;
 
-import com.ie.util.math.HashUtils;
-import com.ie.util.math.RandomUtils;
+import com.zfoo.net.dispatcher.manager.PacketSignal;
+import com.zfoo.util.math.HashUtils;
+import com.zfoo.util.math.RandomUtils;
 import com.zfoo.net.NetContext;
 import com.zfoo.net.consumer.balancer.AbstractConsumerLoadBalancer;
 import com.zfoo.net.dispatcher.manager.PacketDispatcher;
@@ -24,31 +25,25 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- *
  * 服务调度和负载均衡，两个关键点：摘除故障节点，负载均衡
- *
+ * <p>
  * 在clientSession中选择一个可用的session，最终还是调用的IPacketDispatcherManager中的方法
  *
  * @author islandempty
  * @since 2021/7/25
  **/
-public class Consumer implements IConsumer{
+public class Consumer implements IConsumer {
 
     private static final Logger logger = LoggerFactory.getLogger(Consumer.class);
 
-    /**
-     * 直接发送，不需要任何返回值
-     *
-     * @param packet   需要发送的包
-     * @param argument 计算负载均衡的参数，比如用户的id
-     */
+
     @Override
     public void send(IPacket packet, Object argument) {
         try {
             var loadBalancer = NetContext.getConfigManager().consumerLoadBalancer();
             var session = loadBalancer.loadBalancer(packet, argument);
-            var executorConsistentHash = (argument == null)? RandomUtils.randomInt() : HashUtils.fnvHash(argument);
-            NetContext.getDispatcher().send(session,packet, NoAnswerAttachment.valueOf(executorConsistentHash));
+            var executorConsistentHash = (argument == null) ? RandomUtils.randomInt() : HashUtils.fnvHash(argument);
+            NetContext.getDispatcher().send(session, packet, NoAnswerAttachment.valueOf(executorConsistentHash));
         } catch (Throwable t) {
             logger.error("consumer发送未知异常", t);
         }
@@ -59,17 +54,19 @@ public class Consumer implements IConsumer{
         var loadBalancer = NetContext.getConfigManager().consumerLoadBalancer();
         var session = loadBalancer.loadBalancer(packet, argument);
 
-        // 下面的代码逻辑同PacketDispatcher的syncAsk
+
+        // 下面的代码逻辑同PacketDispatcher的syncAsk，如果修改的话，记得一起修改
         var clientAttachment = new SignalPacketAttachment();
-        var executorConsistentHash = (argument == null) ?RandomUtils.randomInt() : HashUtils.fnvHash(argument);
+        var executorConsistentHash = (argument == null) ? RandomUtils.randomInt() : HashUtils.fnvHash(argument);
         clientAttachment.setExecutorConsistentHash(executorConsistentHash);
 
         try {
-            session.addClientSignalAttachment(clientAttachment);
-            // load balancer之前调用
-            loadBalancer.beforeLoadBalancer(session , packet , clientAttachment);
+            PacketSignal.addSignalAttachment(clientAttachment);
 
-            NetContext.getDispatcher().send(session,packet,clientAttachment);
+            // load balancer之前调用
+            loadBalancer.beforeLoadBalancer(session, packet, clientAttachment);
+
+            NetContext.getDispatcher().send(session, packet, clientAttachment);
 
             IPacket responsePacket = clientAttachment.getResponseFuture().get(PacketDispatcher.DEFAULT_TIMEOUT, TimeUnit.MILLISECONDS);
 
@@ -80,9 +77,7 @@ public class Consumer implements IConsumer{
                 throw new UnexpectedProtocolException(StringUtils.format("client expect protocol:[{}], but found protocol:[{}]"
                         , answerClass, responsePacket.getClass().getName()));
             }
-
-           var syncAnswer = new SyncAnswer<>((T) responsePacket, clientAttachment);
-
+            var syncAnswer = new SyncAnswer<>((T) responsePacket, clientAttachment);
             // load balancer之后调用
             loadBalancer.afterLoadBalancer(session, packet, clientAttachment);
             return syncAnswer;
@@ -90,7 +85,7 @@ public class Consumer implements IConsumer{
             throw new NetTimeOutException(StringUtils.format("syncRequest timeout exception, ask:[{}], attachment:[{}]"
                     , JsonUtils.object2String(packet), JsonUtils.object2String(clientAttachment)));
         } finally {
-            session.removeClientSignalAttachment(clientAttachment);
+            PacketSignal.removeSignalAttachment(clientAttachment);
         }
     }
 

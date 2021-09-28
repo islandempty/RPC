@@ -73,16 +73,17 @@ public abstract class IOUtils {
     }
 
     //可批量关闭IO流
-    public static void closeIO(Closeable... closeables){
-        if(closeables == null){
+    public static void closeIO(Closeable... closeables) {
+        if (closeables == null) {
             return;
         }
-        for(Closeable o:closeables){
-            if (o == null){
+
+        for (Closeable obj : closeables) {
+            if (obj == null) {
                 continue;
             }
             try {
-                o.close();
+                obj.close();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
