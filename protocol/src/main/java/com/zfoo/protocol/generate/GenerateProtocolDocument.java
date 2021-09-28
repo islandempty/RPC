@@ -1,3 +1,16 @@
+/*
+ * Copyright (C) 2020 The zfoo Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
+ */
+
 package com.zfoo.protocol.generate;
 
 import com.zfoo.protocol.model.Pair;
@@ -16,12 +29,11 @@ import java.util.stream.Collectors;
 import static com.zfoo.protocol.util.FileUtils.LS;
 
 /**
- *
  * 生成协议的时候，协议的文档注释和字段注释会使用这个类
  *
+ /**
  * @author islandempty
- * @since 2021/7/8
- **/
+ */
 public abstract class GenerateProtocolDocument {
 
     // 临时变量，启动完成就会销毁，协议的文档，外层map的key为协议类；pair的key为总的注释，value为属性字段的注释，value表示的map的key为属性名称
@@ -31,17 +43,19 @@ public abstract class GenerateProtocolDocument {
      * // 复杂的对象
      * // 包括了各种复杂的结构，数组，List，Set，Map
      * //
-     * <p>
      * value aa:
      * // byte的包装类型
      * // 优先使用基础类型，包装类型会有装箱拆箱
      */
     private static Map<Short, Pair<String, Map<String, String>>> tempProtocolDocumentMap = new HashMap<>();
 
+
     public static void clear() {
         tempProtocolDocumentMap.clear();
         tempProtocolDocumentMap = null;
     }
+
+
     /**
      * 此方法仅在生成协议的时候调用，一旦运行，不能调用
      */
@@ -55,15 +69,20 @@ public abstract class GenerateProtocolDocument {
         return protocolDocument;
     }
 
+
     public static void initProtocolDocument(List<IProtocolRegistration> protocolRegistrations) {
         AssertionUtils.notNull(tempProtocolDocumentMap, "[{}]已经初始完成，初始化完成过后不能调用initProtocolDocument", GenerateProtocolDocument.class.getSimpleName());
+
+        // 文件的注释生成
+        var proAbsFile = new File(FileUtils.getProAbsPath());
+        var list = FileUtils.getAllReadableFiles(proAbsFile.getParentFile() == null ? proAbsFile : proAbsFile.getParentFile())
+                .stream()
+                .filter(it -> it.getName().endsWith(".java"))
+                .collect(Collectors.toList());
 
         for (var protocolRegistration : protocolRegistrations) {
             var protocolClazzName = protocolRegistration.protocolConstructor().getDeclaringClass().getSimpleName();
 
-            // 文件的注释生成
-            var proAbsFile = new File(FileUtils.getProAbsPath());
-            var list = FileUtils.getAllReadableFiles(proAbsFile.getParentFile() == null ? proAbsFile : proAbsFile.getParentFile());
             var protocolFile = list.stream()
                     .filter(it -> it.getName().equals(StringUtils.format("{}.java", protocolClazzName)))
                     .findFirst();
@@ -164,4 +183,3 @@ public abstract class GenerateProtocolDocument {
     }
 
 }
-

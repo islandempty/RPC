@@ -14,7 +14,9 @@ package com.zfoo.protocol.exception;
 
 import com.zfoo.protocol.util.StringUtils;
 
-
+/**
+ * @author islandempty
+ */
 public class RunException extends RuntimeException {
 
     public RunException(Throwable cause) {

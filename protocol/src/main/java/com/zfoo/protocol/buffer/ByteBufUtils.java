@@ -1,6 +1,19 @@
+/*
+ * Copyright (C) 2020 The zfoo Authors
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
+ */
+
 package com.zfoo.protocol.buffer;
 
 import com.zfoo.protocol.IPacket;
+import com.zfoo.protocol.collection.ArrayUtils;
 import com.zfoo.protocol.collection.CollectionUtils;
 import com.zfoo.protocol.registration.IProtocolRegistration;
 import com.zfoo.protocol.util.StringUtils;
@@ -14,14 +27,16 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * “可变长字节码算法”的压缩数据的算法，以达到压缩数据，减少磁盘IO。
+ * <p>
+ * google的ProtocolBuffer和Facebook的thrift底层的通信协议都是由这个算法实现
  *
- *   “可变长字节码算法”的压缩数据的算法，以达到压缩数据，减少磁盘IO。
- *    google的ProtocolBuffer和Facebook的thrift底层的通信协议都是由这个算法实现
- *
+ /**
  * @author islandempty
- * @since 2021/7/5
- **/
-public class ByteBufUtils {
+ */
+public abstract class ByteBufUtils {
+
+
     //---------------------------------boolean--------------------------------------
     public static void writeBoolean(ByteBuf byteBuf, boolean value) {
         byteBuf.writeBoolean(value);
@@ -184,47 +199,47 @@ public class ByteBufUtils {
         }
 
         byte[] bytes = new byte[9];
-        int index = 0;
-        bytes[index++] = (byte) (mask | 0x80);
-        bytes[index++] = (byte) (mask >>> 7 | 0x80);
-        bytes[index++] = (byte) (mask >>> 14 | 0x80);
-        bytes[index++] = (byte) (mask >>> 21 | 0x80);
+        bytes[0] = (byte) (mask | 0x80);
+        bytes[1] = (byte) (mask >>> 7 | 0x80);
+        bytes[2] = (byte) (mask >>> 14 | 0x80);
+        bytes[3] = (byte) (mask >>> 21 | 0x80);
+
 
         int a = (int) (mask >>> 28);
         int b = (int) (mask >>> 35);
         if (b == 0) {
-            bytes[index++] = (byte) a;
-            byteBuf.writeBytes(bytes, 0, index);
+            bytes[4] = (byte) a;
+            byteBuf.writeBytes(bytes, 0, 5);
             return;
         }
 
-        bytes[index++] = (byte) (a | 0x80);
+        bytes[4] = (byte) (a | 0x80);
         a = (int) (mask >>> 42);
         if (a == 0) {
-            bytes[index++] = (byte) b;
-            byteBuf.writeBytes(bytes, 0, index);
+            bytes[5] = (byte) b;
+            byteBuf.writeBytes(bytes, 0, 6);
             return;
         }
 
-        bytes[index++] = (byte) (b | 0x80);
+        bytes[5] = (byte) (b | 0x80);
         b = (int) (mask >>> 49);
         if (b == 0) {
-            bytes[index++] = (byte) a;
-            byteBuf.writeBytes(bytes, 0, index);
+            bytes[6] = (byte) a;
+            byteBuf.writeBytes(bytes, 0, 7);
             return;
         }
 
-        bytes[index++] = (byte) (a | 0x80);
+        bytes[6] = (byte) (a | 0x80);
         a = (int) (mask >>> 56);
         if (a == 0) {
-            bytes[index++] = (byte) b;
-            byteBuf.writeBytes(bytes, 0, index);
+            bytes[7] = (byte) b;
+            byteBuf.writeBytes(bytes, 0, 8);
             return;
         }
 
-        bytes[index++] = (byte) (b | 0x80);
-        bytes[index++] = (byte) a;
-        byteBuf.writeBytes(bytes, 0, index);
+        bytes[7] = (byte) (b | 0x80);
+        bytes[8] = (byte) a;
+        byteBuf.writeBytes(bytes, 0, 9);
     }
 
 
@@ -342,10 +357,7 @@ public class ByteBufUtils {
 
     public static String readString(ByteBuf byteBuf) {
         int length = readInt(byteBuf);
-        if (length <= 0) {
-            return StringUtils.EMPTY;
-        }
-        return (String) byteBuf.readCharSequence(length, StringUtils.DEFAULT_CHARSET);
+        return length <= 0 ? StringUtils.EMPTY : (String) byteBuf.readCharSequence(length, StringUtils.DEFAULT_CHARSET);
     }
 
 
@@ -620,7 +632,7 @@ public class ByteBufUtils {
     public static byte[] readByteArray(ByteBuf byteBuf) {
         var length = readInt(byteBuf);
         if (length == 0) {
-            return StringUtils.EMPTY_BYTES;
+            return ArrayUtils.EMPTY_BYTE_ARRAY;
         }
 
         var bytes = new byte[length];
@@ -1055,5 +1067,5 @@ public class ByteBufUtils {
         }
         return chars;
     }
-}
 
+}

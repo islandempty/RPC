@@ -1,4 +1,17 @@
+/*
+ * Copyright (C) 2020 The zfoo Authors
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
+ */
+
 package com.zfoo.protocol.collection;
+
 
 import com.zfoo.protocol.collection.model.NaturalComparator;
 import com.zfoo.protocol.model.Pair;
@@ -8,28 +21,31 @@ import java.util.*;
 
 /**
  * @author islandempty
- * @since 2021/6/1
- **/
+ */
 public abstract class CollectionUtils {
 
-
-    //判断对象是否为空
-    public static boolean isEmpty(Collection<?> collection){
-        return (collection==null || collection.isEmpty());
-    }
-
-    public static boolean isEmpty(Object[] array) {
-        return (array == null || array.length == 0);
+    /**
+     * Return {@code true} if the supplied Collection is {@code null} or empty.
+     * Otherwise, return {@code false}.
+     *
+     * @param collection the Collection to check
+     * @return whether the given Collection is empty
+     */
+    public static boolean isEmpty(Collection<?> collection) {
+        return (collection == null || collection.isEmpty());
     }
 
     public static boolean isNotEmpty(Collection<?> collection) {
         return !isEmpty(collection);
     }
 
-    public static boolean isNotEmpty(Object[] array) {
-        return !isEmpty(array);
-    }
-
+    /**
+     * Return {@code true} if the supplied Map is {@code null} or empty.
+     * Otherwise, return {@code false}.
+     *
+     * @param map the Map to check
+     * @return whether the given Map is empty
+     */
     public static boolean isEmpty(Map<?, ?> map) {
         return (map == null || map.isEmpty());
     }
@@ -39,7 +55,6 @@ public abstract class CollectionUtils {
     }
 
 
-    //获取集合长度
     public static int size(Collection<?> collection) {
         return collection == null ? 0 : collection.size();
     }
@@ -48,8 +63,6 @@ public abstract class CollectionUtils {
         return map == null ? 0 : map.size();
     }
 
-
-    //获取迭代器对象
     public static <T> Iterator<T> iterator(Collection<T> collection) {
         return isEmpty(collection) ? Collections.emptyIterator() : collection.iterator();
     }
@@ -59,10 +72,9 @@ public abstract class CollectionUtils {
     }
 
 
-    /*
-    * 固定集合大小，如果初始化为0，则后续无法继续增加集合容量
-    * */
-
+    /**
+     * 固定大小集合，如果初始化容量为0，则后续无法继续增加集合容量
+     */
     public static List<?> newFixedList(int size) {
         return size <= 0 ? Collections.EMPTY_LIST : new ArrayList<>(size);
     }
@@ -75,11 +87,14 @@ public abstract class CollectionUtils {
         return size <= 0 ? Collections.EMPTY_MAP : new HashMap<>(comfortableCapacity(size));
     }
 
-    //集合的最大容量2^30
+    /**
+     * The largest power of two that can be represented as an {@code int}.
+     */
     public static final int MAX_POWER_OF_TWO = 1 << (Integer.SIZE - 2);
 
     /**
      * 计算HashMap初始化合适的大小
+     * <p>
      * from com.google.common.collect.Maps.capacity()
      */
     public static int comfortableCapacity(int expectedSize) {
@@ -95,7 +110,8 @@ public abstract class CollectionUtils {
         return Integer.MAX_VALUE;
     }
 
-    //归并排序
+    // ----------------------------------归并排序----------------------------------
+
     /**
      * Merges two sorted Collections, a and b, into a single, sorted List
      * such that the natural ordering of the elements is retained.
@@ -211,6 +227,7 @@ public abstract class CollectionUtils {
         return mergedList;
     }
 
+
     /**
      * list合并
      *
@@ -284,4 +301,3 @@ public abstract class CollectionUtils {
         return result;
     }
 }
-

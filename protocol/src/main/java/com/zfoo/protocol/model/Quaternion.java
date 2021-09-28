@@ -13,7 +13,12 @@
 package com.zfoo.protocol.model;
 
 
-
+/**
+ * T cardinal number that is the sum of three and one.
+ *
+ /**
+ * @author islandempty
+ */
 public class Quaternion<A, B, C, D> {
 
     private A a;

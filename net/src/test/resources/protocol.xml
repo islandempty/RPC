@@ -35,6 +35,7 @@
     </module>
 
     <module id="3" name="test" minId="1000" maxId="2000" version="1.0.0">
+        <protocol id="1110" location="com.zfoo.net.packet.CM_Int" enhance="false"/>
         <protocol id="1111" location="com.zfoo.net.packet.SM_Int" enhance="false"/>
         <protocol id="1112" location="com.zfoo.net.packet.CM_Float" enhance="false"/>
         <protocol id="1113" location="com.zfoo.net.packet.SM_Float" enhance="false"/>
@@ -54,17 +55,13 @@
         <protocol id="1153" location="com.zfoo.net.packet.tcp.AsyncMess0Answer" enhance="false"/>
         <protocol id="1154" location="com.zfoo.net.packet.tcp.AsyncMess1Ask" enhance="false"/>
         <protocol id="1155" location="com.zfoo.net.packet.tcp.AsyncMess1Answer" enhance="false"/>
-
         <protocol id="1165" location="com.zfoo.net.packet.csharp.CM_CSharpRequest" enhance="false"/>
         <protocol id="1166" location="com.zfoo.net.packet.csharp.CSharpObjectA" enhance="false"/>
         <protocol id="1167" location="com.zfoo.net.packet.csharp.CSharpObjectB" enhance="false"/>
-
         <protocol id="1200" location="com.zfoo.net.packet.udp.UdpHelloRequest"/>
         <protocol id="1201" location="com.zfoo.net.packet.udp.UdpHelloResponse"/>
-
         <protocol id="1300" location="com.zfoo.net.packet.tcp.TcpHelloRequest"/>
         <protocol id="1301" location="com.zfoo.net.packet.tcp.TcpHelloResponse"/>
-
         <protocol id="1400" location="com.zfoo.net.packet.websocket.WebsocketHelloRequest"/>
         <protocol id="1401" location="com.zfoo.net.packet.websocket.WebsocketHelloResponse"/>
     </module>
@@ -82,4 +79,5 @@
         <protocol id="5000" location="com.zfoo.net.packet.gateway.GatewayToProviderRequest" enhance="false"/>
         <protocol id="5001" location="com.zfoo.net.packet.gateway.GatewayToProviderResponse" enhance="false"/>
     </module>
+
 </protocols>

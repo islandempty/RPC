@@ -28,7 +28,9 @@ import com.zfoo.protocol.util.StringUtils;
 import java.lang.reflect.Field;
 import java.util.Map;
 
-
+/**
+ * @author islandempty
+ */
 public class EnhanceMapSerializer implements IEnhanceSerializer {
 
     @Override

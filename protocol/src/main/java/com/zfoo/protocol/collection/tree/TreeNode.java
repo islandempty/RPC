@@ -1,3 +1,15 @@
+/*
+ * Copyright (C) 2020 The zfoo Authors
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
+ */
+
 package com.zfoo.protocol.collection.tree;
 
 import com.zfoo.protocol.collection.CollectionUtils;
@@ -9,8 +21,7 @@ import java.util.List;
 
 /**
  * @author islandempty
- * @since 2021/7/8
- **/
+ */
 public class TreeNode<T> {
 
     private String name;
@@ -18,22 +29,28 @@ public class TreeNode<T> {
     private TreeNode<T> parent;
     private List<TreeNode<T>> children;
 
+
     /**
-     * 创建树的节点
+     * 创建树的结点
      *
-     * @param name 节点的名称
-     * @param parent 父节点
+     * @param name   数据结点名称
+     * @param parent 父数据结点
      */
-    TreeNode(String name,TreeNode<T> parent){
+
+    TreeNode(String name, TreeNode<T> parent) {
         this.name = name;
         this.parent = parent;
     }
 
-    private static void checkName(String name){
-        if (StringUtils.isBlank(name)||name.contains(StringUtils.PERIOD)){
+    /**
+     * 检测数据结点名称是否合法
+     */
+    private static void checkName(String name) {
+        if (StringUtils.isBlank(name) || name.contains(StringUtils.PERIOD)) {
             throw new RuntimeException("Name of tree node is invalid.");
         }
     }
+
 
     /**
      * 获取数据结点的完整名称。
@@ -50,6 +67,7 @@ public class TreeNode<T> {
 
         return StringUtils.format("{}{}{}", parentName, StringUtils.PERIOD, name);
     }
+
 
     /**
      * 根据名称检查是否存在子数据结点
@@ -123,6 +141,7 @@ public class TreeNode<T> {
         return result;
     }
 
+
     /**
      * 根据名称获取或增加子数据结点
      *
@@ -145,6 +164,7 @@ public class TreeNode<T> {
 
         return node;
     }
+
 
     /**
      * 根据名称移除子数据结点
@@ -174,6 +194,7 @@ public class TreeNode<T> {
         return children.size();
     }
 
+
     public String getName() {
         return name;
     }
@@ -200,4 +221,3 @@ public class TreeNode<T> {
         return StringUtils.format("[{}]:[{}]", fullName(), data);
     }
 }
-

@@ -13,7 +13,12 @@
 package com.zfoo.protocol.model;
 
 
-
+/**
+ * A triple consisting of three elements. It refers to the elements as 'left', 'middle' and 'right'.
+ *
+ /**
+ * @author islandempty
+ */
 public class Triple<L, M, R> {
 
     private L left;

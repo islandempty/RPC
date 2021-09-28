@@ -22,7 +22,12 @@ import com.zfoo.protocol.util.StringUtils;
 
 import java.lang.reflect.Field;
 
-
+/**
+ * 对应于ObjectProtocolSerializer
+ *
+ /**
+ * @author islandempty
+ */
 public class EnhanceObjectProtocolSerializer implements IEnhanceSerializer {
 
     @Override

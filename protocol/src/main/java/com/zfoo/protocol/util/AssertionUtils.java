@@ -1,4 +1,17 @@
+/*
+ * Copyright (C) 2020 The zfoo Authors
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
+ */
+
 package com.zfoo.protocol.util;
+
 
 import com.zfoo.protocol.exception.AssertException;
 
@@ -6,29 +19,27 @@ import java.util.Collection;
 import java.util.Map;
 
 /**
- *
  * Assertion utility class that assists in validating arguments.
  * This class is similar to JUnit's assertion library. If an argument value is
  * deemed invalid, an {@link IllegalArgumentException} is thrown (typically).
  *
- * 帮助验证参数的断言实用程序类。
- * 这个类类似于 JUnit 的断言库。如果参数值为
- * 被视为无效，则抛出 {@link IllegalArgumentException}（通常）
- *
+ /**
  * @author islandempty
- * @since 2021/6/1
- **/
-public class AssertionUtils {
+ */
+public abstract class AssertionUtils {
+
+    // ----------------------------------bool----------------------------------
 
     /**
      * Assert a boolean expression, throwing {@code IllegalArgumentException}
      * if the test result is {@code false}.
      *
-     * 断言一个布尔表达式，抛出{@code IllegalArgumentException}
-     * 如果测试结果是{@code false}。
+     * @param expression a boolean expression
+     * @param message    the exception message to use if the assertion fails
+     * @throws IllegalArgumentException if expression is {@code false}
      */
-    public static void isTrue(boolean expression,String message){
-        if(!expression){
+    public static void isTrue(boolean expression, String message) {
+        if (!expression) {
             throw new AssertException(message);
         }
     }
@@ -49,6 +60,7 @@ public class AssertionUtils {
     public static void isTrue(boolean expression) {
         isTrue(expression, "[Assertion failed] - this expression must be true");
     }
+
 
     // ----------------------------------long----------------------------------
 
@@ -86,13 +98,15 @@ public class AssertionUtils {
         le(x, 1);
     }
 
+
     // ----------------------------------collection----------------------------------
 
     /**
-     * {@code null} 断言集合至少有一个元素
+     * Assert that a collection has elements; that is, it must not be
+     * {@code null} and must have at least one element.
      *
-     * @param collection 需要检查的集合
-     * @param message    断言失败时需要使用的异常
+     * @param collection the collection to check
+     * @param message    the exception message to use if the assertion fails
      * @throws IllegalArgumentException if the collection is {@code null} or has no elements
      */
     public static void notEmpty(Collection<?> collection, String message) {
@@ -123,6 +137,7 @@ public class AssertionUtils {
     public static void notEmpty(Map<?, ?> map) {
         notEmpty(map, "[Assertion failed] - this map must not be empty; it must contain at least one entry");
     }
+
 
     // ----------------------------------object----------------------------------
 
@@ -193,8 +208,6 @@ public class AssertionUtils {
         }
     }
 
-
-
     public static void isInstanceOf(Class<?> clazz, Object obj) {
         isInstanceOf(clazz, obj, "");
     }
@@ -224,4 +237,3 @@ public class AssertionUtils {
     }
 
 }
-

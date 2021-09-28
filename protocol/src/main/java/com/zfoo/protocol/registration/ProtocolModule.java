@@ -1,3 +1,16 @@
+/*
+ * Copyright (C) 2020 The zfoo Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
+ */
+
 package com.zfoo.protocol.registration;
 
 import com.zfoo.protocol.util.AssertionUtils;
@@ -5,22 +18,21 @@ import com.zfoo.protocol.util.StringUtils;
 
 /**
  * @author islandempty
- * @since 2021/7/9
- **/
+ */
 public class ProtocolModule {
 
-    public static final ProtocolModule DEFAULT_PROTOCOL_MODULE = new ProtocolModule((byte) 0, "default","1.0.0");
+    public static final ProtocolModule DEFAULT_PROTOCOL_MODULE = new ProtocolModule((byte) 0, "default", "1.0.0");
 
     private byte id;
 
     private String name;
-
     /**
      * 1.xxx.xxx，将1.0.0转化为1000000
      */
     private int version;
 
     private transient int hash;
+
 
     public ProtocolModule(byte id, String name, String version) {
         if (id < 0) {
@@ -44,7 +56,7 @@ public class ProtocolModule {
         }
     }
 
-    public static  int versionStrToNum(String version){
+    public static int versionStrToNum(String version) {
         assertVersion(version);
         var splits = version.split("\\" + StringUtils.PERIOD);
         var versionNum = Integer.parseInt(splits[0]) * 1_000_000 + Integer.parseInt(splits[1]) * 1_000 + Integer.parseInt(splits[2]);
@@ -53,6 +65,7 @@ public class ProtocolModule {
         AssertionUtils.isTrue(version.equals(newVersionStr), "版本号转换前[{}]和转换后不相等[{}]", version, newVersionStr);
         return versionNum;
     }
+
     public static String versionNumToStr(int version) {
         var versionStr = version / 1_000_000 + StringUtils.PERIOD +
                 version / 1_000 % 1_000 + StringUtils.PERIOD +
@@ -60,6 +73,7 @@ public class ProtocolModule {
         assertVersion(versionStr);
         return versionStr;
     }
+
     public void perfectHash() {
         this.hash = id * 1_000_000 + this.version;
     }
@@ -110,4 +124,3 @@ public class ProtocolModule {
         return StringUtils.format("[id:{}][name:{}][version:{}][hash:{}]", id, name, version, hash);
     }
 }
-

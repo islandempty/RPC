@@ -22,7 +22,9 @@ import com.zfoo.protocol.util.StringUtils;
 
 import java.lang.reflect.Field;
 
-
+/**
+ * @author islandempty
+ */
 public class EnhanceSetSerializer implements IEnhanceSerializer {
 
     @Override

@@ -1,3 +1,15 @@
+/*
+ * Copyright (C) 2020 The zfoo Authors
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
+ */
+
 package com.zfoo.protocol.util;
 
 import com.zfoo.protocol.collection.CollectionUtils;
@@ -18,17 +30,19 @@ import java.util.jar.JarFile;
 
 /**
  * @author islandempty
- * @since 2021/6/21
- **/
-
-
-public class ClassUtils {
+ */
+public abstract class ClassUtils {
 
     public static final String FILE_URL_PROTOCOL = "file";
+
     public static final String JAR_URL_PROTOCOL = "jar";
+
     public static final String CLASS_SUFFIX = ".class";
+
     public static final String JAR_SUFFIX = ".jar";
+
     public static final String ZIP_SUFFIX = ".zip";
+
     public static final char FILE_SEPARATOR = '/';
 
     /*
@@ -50,6 +64,7 @@ public class ClassUtils {
      　　 如：file:/D:/java/eclipse32/workspace/jbpmtest3/bin/
      　我推荐使用Thread.currentThread().getContextClassLoader().getResource("")来得到当前的classpath的绝对路径的URI表示法。
      */
+
     public static String classLocation(final Class<?> cls) {
         AssertionUtils.notNull(cls);
         URL result = null;
@@ -217,12 +232,7 @@ public class ClassUtils {
      */
     public static InputStream getFileFromClassPath(String filePath) throws IOException {
 //        ClassUtils.getDefaultClassLoader().getResourceAsStream(filePath)
-        ClassLoader classLoader = ClassUtils.getDefaultClassLoader();
-        URL resource = classLoader.getResource(filePath);
-        InputStream inputStream = resource.openStream();
-      //  InputStream stream = ClassUtils.getDefaultClassLoader().getResource(filePath).openStream();
-        return inputStream;
+        return ClassUtils.getDefaultClassLoader().getResource(filePath).openStream();
     }
 
 }
-

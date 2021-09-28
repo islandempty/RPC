@@ -17,7 +17,9 @@ import com.zfoo.protocol.buffer.ByteBufUtils;
 import com.zfoo.protocol.registration.field.IFieldRegistration;
 import io.netty.buffer.ByteBuf;
 
-
+/**
+ * @author islandempty
+ */
 public class FloatSerializer implements ISerializer {
 
 

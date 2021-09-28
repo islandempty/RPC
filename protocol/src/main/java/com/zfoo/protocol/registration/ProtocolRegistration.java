@@ -1,3 +1,16 @@
+/*
+ * Copyright (C) 2020 The zfoo Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
+ */
+
 package com.zfoo.protocol.registration;
 
 import com.zfoo.protocol.IPacket;
@@ -13,10 +26,12 @@ import java.lang.reflect.Field;
 /**
  * 协议必须为一个简单的POJO对象，必须有一个标识为private static final transient的PROTOCOL_ID号
  * 必须实现IPacket接口,返回的protocolId必须和PROTOCOL_ID号一致
+ *
+ /**
  * @author islandempty
- * @since 2021/7/9
- **/
-public class ProtocolRegistration implements IProtocolRegistration{
+ */
+public class ProtocolRegistration implements IProtocolRegistration {
+
 
     private short id;
     private byte module;
@@ -132,5 +147,5 @@ public class ProtocolRegistration implements IProtocolRegistration{
     public void setConstructor(Constructor<?> constructor) {
         this.constructor = constructor;
     }
-}
 
+}

@@ -20,7 +20,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-
+/**
+ * @author islandempty
+ */
 public abstract class ArrayUtils {
 
     public static final boolean[] EMPTY_BOOLEAN_ARRAY = new boolean[0];

@@ -1,6 +1,18 @@
+/*
+ * Copyright (C) 2020 The zfoo Authors
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
+ */
+
 package com.zfoo.protocol.util;
 
-import com.zfoo.protocol.collection.CollectionUtils;
+import com.zfoo.protocol.collection.ArrayUtils;
 
 import java.nio.charset.Charset;
 import java.util.Arrays;
@@ -10,16 +22,14 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- *
- * 对空安全和线程安全的 {@link String} 操作。
  * Operations on {@link String} that are null safe and thread safe.
  *
+ /**
  * @author islandempty
- * @since 2021/6/1
- **/
-public class StringUtils {
+ */
+public abstract class StringUtils {
+
     public static final String EMPTY = "";
-    public static final byte[] EMPTY_BYTES = new byte[0];
     public static final String[] EMPTY_ARRAY = new String[0];
 
     public static final String SPACE = " ";
@@ -357,7 +367,7 @@ public class StringUtils {
         try {
             return str.getBytes(DEFAULT_CHARSET);
         } catch (Exception e) {
-            return EMPTY_BYTES;
+            return ArrayUtils.EMPTY_BYTE_ARRAY;
         }
     }
 
@@ -384,7 +394,7 @@ public class StringUtils {
      * @param separator the separator character to use, null treated as ""
      * @param objects   the varargs providing the values to join together. {@code null} elements are treated as ""
      * @return the joined String.
-     * @throws java.lang.IllegalArgumentException if a null varargs is provided
+     * @throws IllegalArgumentException if a null varargs is provided
      */
     public static String joinWith(final String separator, final Object... objects) {
         if (objects == null) {
@@ -419,7 +429,7 @@ public class StringUtils {
      * @return 结果
      */
     public static String format(final String template, final Object... args) {
-        if (isBlank(template) || CollectionUtils.isEmpty(args)) {
+        if (isBlank(template) || ArrayUtils.isEmpty(args)) {
             return template;
         }
 
@@ -465,4 +475,3 @@ public class StringUtils {
         return Character.isWhitespace(ch) || STOP_WORD.contains(ch);
     }
 }
-

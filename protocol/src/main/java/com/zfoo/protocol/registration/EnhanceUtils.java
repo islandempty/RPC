@@ -1,3 +1,16 @@
+/*
+ * Copyright (C) 2020 The zfoo Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
+ */
+
 package com.zfoo.protocol.registration;
 
 import com.zfoo.protocol.IPacket;
@@ -21,10 +34,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
+ * 对应于ProtocolRegistration
+ *
+ /**
  * @author islandempty
- * @since 2021/7/9
- **/
-public class EnhanceUtils {
+ */
+public abstract class EnhanceUtils {
+
     // 临时变量，是一个基本类型序列化器对应的增强类型序列化器
     private static Map<ISerializer, IEnhanceSerializer> tempEnhanceSerializerMap = new HashMap<>();
 
@@ -118,6 +134,10 @@ public class EnhanceUtils {
         constructorFiled.setModifiers(Modifier.PRIVATE);
         enhanceClazz.addField(constructorFiled);
 
+        CtField receiverFiled = new CtField(classPool.get(Object.class.getCanonicalName()), "receiver", enhanceClazz);
+        receiverFiled.setModifiers(Modifier.PRIVATE);
+        enhanceClazz.addField(receiverFiled);
+
         // 定义类所包含的所有子协议成员
         var allSubProtocolIds = ProtocolAnalysis.getAllSubProtocolIds(protocolId)
                 .stream()
@@ -126,7 +146,7 @@ public class EnhanceUtils {
 
         for (var subProtocolId : allSubProtocolIds) {
             var protocolRegistrationField = new CtField(classPool.get(IProtocolRegistration.class.getCanonicalName()), getProtocolRegistrationFieldNameByProtocolId(subProtocolId), enhanceClazz);
-            constructorFiled.setModifiers(Modifier.PRIVATE);
+            protocolRegistrationField.setModifiers(Modifier.PRIVATE);
             enhanceClazz.addField(protocolRegistrationField);
         }
 
@@ -146,6 +166,11 @@ public class EnhanceUtils {
         protocolConstructorMethod.setModifiers(Modifier.PUBLIC + Modifier.FINAL);
         protocolConstructorMethod.setBody("{return this.constructor;}");
         enhanceClazz.addMethod(protocolConstructorMethod);
+
+        CtMethod receiverMethod = new CtMethod(classPool.get(Object.class.getCanonicalName()), "receiver", null, enhanceClazz);
+        receiverMethod.setModifiers(Modifier.PUBLIC + Modifier.FINAL);
+        receiverMethod.setBody("{return this.receiver;}");
+        enhanceClazz.addMethod(receiverMethod);
 
         CtMethod moduleMethod = new CtMethod(classPool.get(byte.class.getCanonicalName()), "module", null, enhanceClazz);
         moduleMethod.setModifiers(Modifier.PUBLIC + Modifier.FINAL);
@@ -239,5 +264,5 @@ public class EnhanceUtils {
     public static String getProtocolRegistrationFieldNameByProtocolId(short id) {
         return StringUtils.format("{}{}", StringUtils.uncapitalize(ProtocolRegistration.class.getSimpleName()), id);
     }
-}
 
+}

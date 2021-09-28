@@ -8,7 +8,6 @@ import com.zfoo.net.consumer.service.Consumer;
 import com.zfoo.net.dispatcher.manager.PacketDispatcher;
 import com.zfoo.net.packet.service.PacketService;
 import com.zfoo.net.session.manager.SessionManager;
-import com.zfoo.protocol.ProtocolManager;
 import com.zfoo.protocol.registration.ProtocolModule;
 import com.zfoo.protocol.util.DomUtils;
 import com.zfoo.protocol.util.StringUtils;

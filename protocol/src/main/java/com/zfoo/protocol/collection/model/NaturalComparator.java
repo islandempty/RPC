@@ -1,15 +1,28 @@
+/*
+ * Copyright (C) 2020 The zfoo Authors
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
+ */
+
 package com.zfoo.protocol.collection.model;
 
-/**
- * @author islandempty
- * @since 2021/6/1
- **/
 import java.util.Comparator;
 
 public class NaturalComparator<E extends Comparable<? super E>> implements Comparator<E> {
 
-    //单例
+
+    /**
+     * The singleton instance.
+     */
     private static final NaturalComparator<?> INSTANCE = new NaturalComparator<>();
+
+    //-----------------------------------------------------------------------
 
     /**
      * Constructor whose use should be avoided.
@@ -19,6 +32,8 @@ public class NaturalComparator<E extends Comparable<? super E>> implements Compa
     public NaturalComparator() {
         super();
     }
+
+    //-----------------------------------------------------------------------
 
     /**
      * Gets the singleton instance of a ComparableComparator.
@@ -30,10 +45,11 @@ public class NaturalComparator<E extends Comparable<? super E>> implements Compa
      * @param <E> the element type
      * @return the singleton ComparableComparator
      */
-
     public static <E extends Comparable<? super E>> NaturalComparator<E> getInstance() {
         return (NaturalComparator<E>) INSTANCE;
     }
+
+    //-----------------------------------------------------------------------
 
     /**
      * Compare the two {@link Comparable Comparable} arguments.
@@ -48,10 +64,9 @@ public class NaturalComparator<E extends Comparable<? super E>> implements Compa
      * @throws ClassCastException   if <i>obj1</i> is not a <code>Comparable</code>,
      *                              or when <code>((Comparable)obj1).compareTo(obj2)</code> does
      */
-
     @Override
     public int compare(final E a, final E b) {
         return a.compareTo(b);
     }
-}
 
+}

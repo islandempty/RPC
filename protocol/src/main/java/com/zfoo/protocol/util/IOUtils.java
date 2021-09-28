@@ -1,15 +1,25 @@
+/*
+ * Copyright (C) 2020 The zfoo Authors
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
+ */
+
 package com.zfoo.protocol.util;
 
 import java.io.*;
 
 /**
  * @author islandempty
- * @since 2021/6/16
- **/
+ */
 public abstract class IOUtils {
 
-
-    //表示文件或流的结尾
+    // Represents the end-of-file (or stream)
     public static final int EOF = -1;
 
     // The number of bytes in a byte
@@ -21,58 +31,55 @@ public abstract class IOUtils {
     // The number of bytes in a gigabyte
     public static final long BYTES_PER_GB = BYTES_PER_MB * 1024;
 
-    //位计算
     public static final int BITS_PER_BYTE = ONE_BYTE * 8;
     public static final int BITS_PER_KB = BYTES_PER_KB * 8;
     public static final int BITS_PER_MB = BYTES_PER_MB * 8;
     public static final long BITS_PER_GB = BYTES_PER_GB * 8L;
 
+
     /**
-
-     *将字节从InputStream复制到OutputStream。
-     *<p>
-     *大数据流（超过2GB）将返回字节复制值-1
-     *在复制完成之后，因为正确的字节数不能作为int返回。
-     *对于大型流，请使用copyragle（InputStream、OutputStream）方法。
+     * Copies bytes from an InputStream to an OutputStream.
+     * <p>
+     * Large streams (over 2GB) will return a bytes copied value of -1
+     * after the copy has completed since the correct number of bytes cannot be returned as an int.
+     * For large streams use the copyLarge(InputStream, OutputStream) method.
      *
-     *@param input 输入要读取的<code>InputStream</code>
-     *@param output 输出写入的<code>OutputStream</code>
-     *@返回复制的字节数，如果&gt Integer.MAX_VALUE，则返回-1；
-     *@throws IOException IO异常
+     * @param input  the <code>InputStream</code> to read from
+     * @param output the <code>OutputStream</code> to write to
+     * @return the number of bytes copied, or -1 if &gt; Integer.MAX_VALUE
+     * @throws IOException IO异常
      */
-
-    public static int copy(final InputStream input, final OutputStream output) throws IOException{
+    public static int copy(final InputStream input, final OutputStream output) throws IOException {
         byte[] buffer = new byte[BYTES_PER_KB];
         long count = 0;
         int n;
-        //从InputStream中读取一个数组的数据，如果返回-1 则表示数据读取完成了
-        while (EOF != (n = input.read(buffer))){
-            output.write(buffer,0,n);
-            count +=n;
+        while (EOF != (n = input.read(buffer))) {
+            output.write(buffer, 0, n);
+            count += n;
         }
 
-        if (count > BITS_PER_GB * 2L){
+        if (count > BYTES_PER_GB * 2L) {
             return -1;
         }
-        return (int)count;
+        return (int) count;
     }
 
     /**
-     *以byte[]的形式获取InputStream的内容。
+     * Gets the contents of an InputStream as a byte[].
      *
-     *@param input 输入要读取的输入流
-     *@return 返回请求的字节数组
-     *@throws IOException IO异常
+     * @param input the InputStream to read from
+     * @return the requested byte array
+     * @throws IOException IO异常
      */
-    public static byte[] toByteArray(final InputStream input) throws IOException{
+    public static byte[] toByteArray(final InputStream input) throws IOException {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
-        copy(input,output);
+        copy(input, output);
         var bytes = output.toByteArray();
-        IOUtils.closeIO(input,output);
+        IOUtils.closeIO(input, output);
         return bytes;
     }
 
-    //可批量关闭IO流
+
     public static void closeIO(Closeable... closeables) {
         if (closeables == null) {
             return;
@@ -90,8 +97,4 @@ public abstract class IOUtils {
         }
     }
 
-
-
-
 }
-

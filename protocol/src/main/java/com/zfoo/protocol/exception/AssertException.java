@@ -1,27 +1,30 @@
+/*
+ * Copyright (C) 2020 The zfoo Authors
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
+ */
+
 package com.zfoo.protocol.exception;
 
 import com.zfoo.protocol.util.StringUtils;
 
 /**
  * @author islandempty
- * @since 2021/6/2
- **/
-public class AssertException extends RuntimeException{
-        public AssertException(String message){
-            super(message);
-        }
+ */
+public class AssertException extends RuntimeException {
 
-    /**
-     * 格式化字符串
-     * 此方法只是简单将占位符 {} 按照顺序替换为参数
-     * 例如:format("this is {} for {}", "a", "b") =》 this is a for b
-     *
-     * @param template 字符串模板
-     * @param args 参数列表
-     */
-        public AssertException(String template,Object... args){
-            super(StringUtils.format(template,args));
-        }
+    public AssertException(String message) {
+        super(message);
+    }
+
+    public AssertException(String template, Object... args) {
+        super(StringUtils.format(template, args));
+    }
 
 }
-

@@ -1,3 +1,15 @@
+/*
+ * Copyright (C) 2020 The zfoo Authors
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
+ */
+
 package com.zfoo.protocol.collection;
 
 import java.util.*;
@@ -5,8 +17,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author islandempty
- * @since 2021/7/8
- **/
+ */
 public class ConcurrentArrayList<E> implements List<E> {
 
     private ReentrantLock lock;
@@ -44,6 +55,7 @@ public class ConcurrentArrayList<E> implements List<E> {
             lock.unlock();
         }
     }
+
     @Override
     public boolean contains(Object o) {
         lock.lock();
@@ -76,10 +88,10 @@ public class ConcurrentArrayList<E> implements List<E> {
     }
 
     @Override
-    public <T> T[] toArray(T[] ts) {
+    public <T> T[] toArray(T[] a) {
         lock.lock();
         try {
-            return list.toArray(ts);
+            return list.toArray(a);
         } finally {
             lock.unlock();
         }
@@ -106,50 +118,50 @@ public class ConcurrentArrayList<E> implements List<E> {
     }
 
     @Override
-    public boolean containsAll(Collection<?> collection) {
+    public boolean containsAll(Collection<?> c) {
         lock.lock();
         try {
-            return list.containsAll(collection);
+            return list.containsAll(c);
         } finally {
             lock.unlock();
         }
     }
 
     @Override
-    public boolean addAll(Collection<? extends E> collection) {
+    public boolean addAll(Collection<? extends E> c) {
         lock.lock();
         try {
-            return list.addAll(collection);
+            return list.addAll(c);
         } finally {
             lock.unlock();
         }
     }
 
     @Override
-    public boolean addAll(int i, Collection<? extends E> collection) {
+    public boolean addAll(int index, Collection<? extends E> c) {
         lock.lock();
         try {
-            return list.addAll(i, collection);
+            return list.addAll(index, c);
         } finally {
             lock.unlock();
         }
     }
 
     @Override
-    public boolean removeAll(Collection<?> collection) {
+    public boolean removeAll(Collection<?> c) {
         lock.lock();
         try {
-            return list.removeAll(collection);
+            return list.removeAll(c);
         } finally {
             lock.unlock();
         }
     }
 
     @Override
-    public boolean retainAll(Collection<?> collection) {
+    public boolean retainAll(Collection<?> c) {
         lock.lock();
         try {
-            return list.retainAll(collection);
+            return list.retainAll(c);
         } finally {
             lock.unlock();
         }
@@ -270,4 +282,3 @@ public class ConcurrentArrayList<E> implements List<E> {
         return super.hashCode();
     }
 }
-

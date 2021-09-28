@@ -17,7 +17,9 @@ import com.zfoo.protocol.registration.field.IFieldRegistration;
 
 import java.lang.reflect.Field;
 
-
+/**
+ * @author islandempty
+ */
 public interface IEnhanceSerializer {
 
     /**
