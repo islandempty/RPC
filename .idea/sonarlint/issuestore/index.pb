@@ -44,8 +44,6 @@ o
 ?storage/src/main/java/com/zfoo/storage/model/anno/Resource.java,9\0\90d48758ee473050028ea71fb683a671498b5d63
 l
 <storage/src/main/java/com/zfoo/storage/model/anno/Index.java,2\9\2937521a8199e442fcae4fc7f21b3b505e2ccbc7
-9
-	README.md,8\e\8ec9a00bfd09b3190ac6b22251dbb1aa95a0579d
 s
 Cstorage/src/main/java/com/zfoo/storage/model/anno/ResInjection.java,b\1\b12c66c6157458082edec93b0051dc6b843df370
 x
