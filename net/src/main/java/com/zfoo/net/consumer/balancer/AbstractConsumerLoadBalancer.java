@@ -38,10 +38,6 @@ public abstract class AbstractConsumerLoadBalancer implements IConsumerLoadBalan
         return balancer;
     }
 
-    public List<Session> getSessionsByPacket(IPacket packet) {
-        return getSessionsByModule(ProtocolManager.moduleByProtocolId(packet.protocolId()));
-    }
-
     public List<Session> getSessionsByModule(ProtocolModule module) {
         var clientSessionMap = NetContext.getSessionManager().getClientSessionMap();
         var sessions = clientSessionMap.values().stream()
@@ -60,23 +56,6 @@ public abstract class AbstractConsumerLoadBalancer implements IConsumerLoadBalan
                 })
                 .collect(Collectors.toList());
         return sessions;
-    }
-
-
-    public boolean sessionHasModule(Session session, IPacket packet) {
-
-        var attribute = session.getAttribute(AttributeType.CONSUMER);
-        if (Objects.isNull(attribute)) {
-            return false;
-        }
-
-        var registerVO = (RegisterVO) attribute;
-        if (Objects.isNull(registerVO.getProviderConfig())) {
-            return false;
-        }
-
-        var module = ProtocolManager.moduleByProtocolId(packet.protocolId());
-        return registerVO.getProviderConfig().getModules().contains(module);
     }
 }
 
