@@ -34,7 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * @author islandempty
  */
-@Ignore
+
 public class TcpClientTest {
 
     private static final Logger logger = LoggerFactory.getLogger(TcpClientTest.class);
@@ -105,7 +105,7 @@ public class TcpClientTest {
                     var ask = new AsyncMess0Ask();
                     ask.setMessage("Hello, client0 -> server0!");
 
-                    NetContext.getDispatcher().asyncAsk(null, ask, AsyncMess0Answer.class, null)
+                    NetContext.getDispatcher().asyncAsk(session1, ask, AsyncMess0Answer.class, null)
                             .notComplete(new SafeRunnable() {
                                 @Override
                                 public void doRun() {
@@ -125,5 +125,7 @@ public class TcpClientTest {
 
         ThreadUtils.sleep(Long.MAX_VALUE);
     }
+
+
 
 }
